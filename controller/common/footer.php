@@ -7,6 +7,8 @@ class ControllerCommonFooter extends Controller {
 		$this->data['text_service'] = $this->language->get('text_service');
 		$this->data['text_extra'] = $this->language->get('text_extra');
 		$this->data['text_contact'] = $this->language->get('text_contact');
+		$this->data['text_faq'] = $this->language->get('text_faq');
+		$this->data['text_delivery'] = $this->language->get('text_delivery');
 		$this->data['text_return'] = $this->language->get('text_return');
     	$this->data['text_sitemap'] = $this->language->get('text_sitemap');
 		$this->data['text_manufacturer'] = $this->language->get('text_manufacturer');
@@ -42,7 +44,9 @@ class ControllerCommonFooter extends Controller {
 		
         $this->data['feedback'] = $this->url->link('information/feedback');
         $this->data['contact'] = $this->url->link('information/contact');
-		$this->data['return'] = $this->url->link('account/return/insert', '', 'SSL');
+        $this->data['faq'] = '/faq';
+        $this->data['delivery'] = '/oplata-i-dostavka';
+		$this->data['return'] = '/obmen-i-vozvrat';
     	$this->data['sitemap'] = $this->url->link('information/sitemap');
 		$this->data['manufacturer'] = $this->url->link('product/manufacturer');
 		$this->data['voucher'] = $this->url->link('account/voucher', '', 'SSL');
@@ -51,8 +55,9 @@ class ControllerCommonFooter extends Controller {
 		$this->data['account'] = $this->url->link('account/account', '', 'SSL');
 		$this->data['order'] = $this->url->link('account/order', '', 'SSL');
 		$this->data['wishlist'] = $this->url->link('account/wishlist', '', 'SSL');
-		$this->data['newsletter'] = $this->url->link('account/newsletter', '', 'SSL');		
-
+		$this->data['newsletter'] = $this->url->link('account/newsletter', '', 'SSL');	
+        $this->data['action_back'] = $this->url->link('information/feedback');	
+$this->data['mobile'] = $this->config->get('mobile');
 		$this->data['powered'] = sprintf($this->language->get('text_powered'), $this->config->get('config_name'), date('Y', time()));
 		
 		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/common/footer.tpl')) {

@@ -17,7 +17,7 @@ class ModelShippingCitylink extends Model {
 	
 		if ($status) {
 			$cost = 0;
-			$weight = $this->cart->getWeight();
+			$weight = $this->cart->getTotal();
 			
 			$rates = explode(',', $this->config->get('citylink_rate'));
 			
@@ -34,11 +34,11 @@ class ModelShippingCitylink extends Model {
 			}
 			
 			$quote_data = array();
-			
-			if ((float)$cost) {
+			// (' . $this->language->get('text_weight') . ' ' . $this->weight->format($weight, $this->config->get('config_weight_class_id')) . ')
+			/*-if ((float)$cost !== false) {-*/
 				$quote_data['citylink'] = array(
         			'code'         => 'citylink.citylink',
-        			'title'        => $this->language->get('text_title') . '  (' . $this->language->get('text_weight') . ' ' . $this->weight->format($weight, $this->config->get('config_weight_class_id')) . ')',
+        			'title'        => $this->language->get('text_title') . ' ',
         			'cost'         => $cost,
         			'tax_class_id' => $this->config->get('citylink_tax_class_id'),
 					'text'         => $this->currency->format($this->tax->calculate($cost, $this->config->get('citylink_tax_class_id'), $this->config->get('config_tax')))
@@ -51,7 +51,7 @@ class ModelShippingCitylink extends Model {
 					'sort_order' => $this->config->get('citylink_sort_order'),
         			'error'      => false
       			);
-			}
+			//}
 		}
 	
 		return $method_data;

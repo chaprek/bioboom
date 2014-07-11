@@ -12,6 +12,28 @@ class ModelShippingFlat extends Model {
 		} else {
 			$status = false;
 		}
+        
+        
+        /*-Розделение доставки-*/
+            $cost = 0;
+			$weight = $this->cart->getTotal();
+			
+			$rates = explode(',', $this->config->get('flat_cost'));
+			
+			foreach ($rates as $rate) {
+  				$data = explode(':', $rate);
+  					
+				if ($data[0] >= $weight) {
+					if (isset($data[1])) {
+    					$cost = $data[1];
+					}
+					
+   					break;
+  				}
+			}
+        
+        
+        
 
 		$method_data = array();
 	
@@ -21,7 +43,7 @@ class ModelShippingFlat extends Model {
       		$quote_data['flat'] = array(
         		'code'         => 'flat.flat',
         		'title'        => $this->language->get('text_description'),
-        		'cost'         => $this->config->get('flat_cost'),
+        		'cost'         => $cost,
         		'tax_class_id' => $this->config->get('flat_tax_class_id'),
 				'text'         => $this->currency->format($this->tax->calculate($this->config->get('flat_cost'), $this->config->get('flat_tax_class_id'), $this->config->get('config_tax')))
       		);

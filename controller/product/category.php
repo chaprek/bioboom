@@ -8,7 +8,7 @@ class ControllerProductCategory extends Controller {
 		$this->load->model('catalog/product');
 		
 		$this->load->model('tool/image'); 
-		
+
 		if (isset($this->request->get['sort'])) {
 			$sort = $this->request->get['sort'];
 		} else {
@@ -37,7 +37,7 @@ class ControllerProductCategory extends Controller {
 
    		$this->data['breadcrumbs'][] = array(
        		'text'      => $this->language->get('text_home'),
-			'href'      => $this->url->link('common/home'),
+			'href'      => "/"/*$this->url->link('common/home')*/,
        		'separator' => false
    		);	
 			
@@ -46,6 +46,7 @@ class ControllerProductCategory extends Controller {
 		
 			$parts = explode('_', (string)$this->request->get['path']);
 		
+            $s=0;
 			foreach ($parts as $path_id) {
 				if (!$path) {
 					$path = (int)$path_id;
@@ -58,10 +59,11 @@ class ControllerProductCategory extends Controller {
 				if ($category_info) {
 	       			$this->data['breadcrumbs'][] = array(
    	    				'text'      => $category_info['name'],
-						'href'      => $this->url->link('product/category', 'path=' . $path),
+						'href'      => ($s != count($parts)-1)?str_replace (HTTP_SERVER,"/",$this->url->link('product/category', 'path=' . $path)):"",
         				'separator' => $this->language->get('text_separator')
         			);
 				}
+                $s++;
 			}		
 		
 			$category_id = (int)array_pop($parts);
@@ -113,9 +115,12 @@ class ControllerProductCategory extends Controller {
 			} else {
 				$this->data['thumb'] = '';
 			}
-									
+				
+            $this->data['second_title'] = $category_info['name_second'];						
 			$this->data['description'] = html_entity_decode($category_info['description'], ENT_QUOTES, 'UTF-8');
+			$this->data['description_seo'] = html_entity_decode($category_info['description_seo'], ENT_QUOTES, 'UTF-8');
 			$this->data['compare'] = $this->url->link('product/compare');
+                					
 			
 			$url = '';
 			
@@ -135,6 +140,10 @@ class ControllerProductCategory extends Controller {
 			
 			$results = $this->model_catalog_category->getCategories($category_id);
 			
+            
+            $product_tot = 0;
+            $resul = array();
+            
 			foreach ($results as $result) {
 				$data = array(
 					'filter_category_id'  => $result['category_id'],
@@ -147,23 +156,55 @@ class ControllerProductCategory extends Controller {
 					'name'  => $result['name'] . ($this->config->get('config_product_count') ? ' (' . $product_total . ')' : ''),
 					'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '_' . $result['category_id'] . $url)
 				);
+                
+                                               
 			}
+            
+         //   $child_cats = $this->model_catalog_category->getCategoriesByParentId($category_id);
+//            
+//            foreach($child_cats as $cats){
+//                
+//               $data = array(
+//				'filter_category_id' => $cats, 
+//				'sort'               => $sort,
+//				'order'              => $order,
+//				'start'              => ($page - 1) * $limit,
+//				'limit'              => $limit
+//			     );
+//					
+//			     $product_tot += $this->model_catalog_product->getTotalProducts($data); 
+//			
+//                //echo $product_tot."---".$result['category_id']."****";
+//            
+//			     $resul = array_merge($this->model_catalog_product->getProducts($data), $resul);
+//                                    
+//            }
+            
 			
 			$this->data['products'] = array();
 			
-			$data = array(
+            
+             $data = array(
 				'filter_category_id' => $category_id, 
+                'filter_sub_category' => 1,
 				'sort'               => $sort,
 				'order'              => $order,
 				'start'              => ($page - 1) * $limit,
 				'limit'              => $limit
 			);
 					
-			$product_total = $this->model_catalog_product->getTotalProducts($data); 
+			$product_total = $this->model_catalog_product->getTotalProducts($data) + $product_tot; 
 			
-			$results = $this->model_catalog_product->getProducts($data);
-			
-			foreach ($results as $result) {
+			$resul = array_merge($this->model_catalog_product->getProducts($data), $resul);
+             
+             
+            /*-BESTSELLERS-*/
+            $bestsell = $this->model_catalog_product->getCountBestSellerProducts(100);   
+            
+            
+            $this->data['product_total'] = $product_total;
+            
+			foreach ($resul as $result) {
 				if ($result['image']) {
 					$image = $this->model_tool_image->resize($result['image'], $this->config->get('config_image_product_width'), $this->config->get('config_image_product_height'));
 				} else {
@@ -193,16 +234,82 @@ class ControllerProductCategory extends Controller {
 				} else {
 					$rating = false;
 				}
-								
+                
+                
+                /*-MAKE MARK OF PRODUCTs-*/
+            $mark = '';            
+            
+            /*-Find New Product-*/
+            $date_elems = explode(" ",$result['date_added']);
+            $date = explode("-", $date_elems[0]);
+            $time = explode(":", $date_elems[1]); 
+            $res =  mktime($time[0], $time[1],$time[2], $date[1],$date[2], $date[0]);
+            
+            if(time() - $res < 60*60*24*30){
+                $mark = 'cat_new_prod';    
+            }
+            if(in_array($result['product_id'], $bestsell)){
+                $mark = 'cat_bestsell';
+            }
+            if($special){
+                $mark = 'cat_sale';
+            }
+            
+            if($result['jan'] == 1){
+                $mark = 'cat_new_prod';
+            } else if($result['act'] == 1){
+                $mark = 'cat_act_mark';
+            } else if($result['isbn'] == 1){
+                $mark = 'cat_bestsell';
+            } else if($result['mpn'] == 1){
+                $mark = 'cat_sale';
+            } else if($result['stock_status_id'] == 8){
+                $mark = 'cat_per_order';
+            }
+            
+            if($result['jan'] == 2 && $mark == 'cat_new_prod'){
+                $mark = '';
+            } else if($result['isbn'] == 2  && $mark == 'cat_bestsell'){
+                $mark = '';
+            } else if($result['mpn'] == 2  && $mark == 'cat_sale'){
+                $mark = '';
+            }
+            
+            
+            
+            /*-узнаем колличество товара в опциях-*/
+            $related = $this->model_catalog_product->getProductOptionsRelated($result['product_id']);             
+            
+            $quantity_opt = false;
+            foreach($related as $rel){
+                if($rel['quantity'] > 0){
+                    $quantity_opt = true;
+                }
+            }
+                        
+            if($result['quantity'] <= 0 && !$quantity_opt){
+                $in_stock = false;
+            } else {
+                $in_stock = true;
+            }
+            
+                
+               //echo $result['name']."  ".$result['product_id']; 
+					
+                    //print_r($result);
+                    			
 				$this->data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
 					'name'        => $result['name'],
-					'description' => utf8_substr(strip_tags(html_entity_decode($result['description'], ENT_QUOTES, 'UTF-8')), 0, 100) . '..',
+					'description' => html_entity_decode($result['description_min'], ENT_QUOTES, 'UTF-8'),
 					'price'       => $price,
 					'special'     => $special,
+                    'mark'        => $mark,  
 					'tax'         => $tax,
 					'rating'      => $result['rating'],
+                    'quantity'    => $result['quantity'],
+                    'in_stock'    => $in_stock,
 					'reviews'     => sprintf($this->language->get('text_reviews'), (int)$result['reviews']),
 					'href'        => $this->url->link('product/product', 'path=' . $this->request->get['path'] . '&product_id=' . $result['product_id'])
 				);
@@ -259,8 +366,8 @@ class ControllerProductCategory extends Controller {
 					'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=rating&order=ASC' . $url)
 				);
 			}
-			
-			$this->data['sorts'][] = array(
+			//Сортировка по модели
+		/*-	$this->data['sorts'][] = array(
 				'text'  => $this->language->get('text_model_asc'),
 				'value' => 'p.model-ASC',
 				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.model&order=ASC' . $url)
@@ -271,7 +378,7 @@ class ControllerProductCategory extends Controller {
 				'value' => 'p.model-DESC',
 				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . '&sort=p.model&order=DESC' . $url)
 			);
-			
+			-*/
 			$url = '';
 	
 			if (isset($this->request->get['sort'])) {
@@ -291,14 +398,14 @@ class ControllerProductCategory extends Controller {
 			);
 						
 			$this->data['limits'][] = array(
-				'text'  => 25,
-				'value' => 25,
+				'text'  => 24,
+				'value' => 24,
 				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&limit=25')
 			);
 			
 			$this->data['limits'][] = array(
-				'text'  => 50,
-				'value' => 50,
+				'text'  => 48,
+				'value' => 48,
 				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&limit=50')
 			);
 
@@ -309,8 +416,8 @@ class ControllerProductCategory extends Controller {
 			);
 			
 			$this->data['limits'][] = array(
-				'text'  => 100,
-				'value' => 100,
+				'text'  => 99,
+				'value' => 99,
 				'href'  => $this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&limit=100')
 			);
 						
@@ -334,6 +441,20 @@ class ControllerProductCategory extends Controller {
 			$pagination->limit = $limit;
 			$pagination->text = $this->language->get('text_pagination');
 			$pagination->url = $this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&page={page}');
+		
+		$tot_pages=$product_total/$limit;
+		if($tot_pages>1){
+			if($page<$tot_pages){
+				$pagin_next=$this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&page='.($page+1));
+				$GLOBALS["pagin_next"]=$pagin_next;
+			}
+						if($page>1){
+				$pagin_prev=$this->url->link('product/category', 'path=' . $this->request->get['path'] . $url . '&page='.($page-1));
+				$GLOBALS["pagin_prev"]=$pagin_prev;
+			}
+		}
+		
+		
 		
 			$this->data['pagination'] = $pagination->render();
 		

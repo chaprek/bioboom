@@ -1,6 +1,6 @@
 <?php  
 class ControllerModuleLanguage extends Controller {
-	public function index() {
+	protected function index() {
     	if (isset($this->request->post['language_code'])) {
 			$this->session->data['language'] = $this->request->post['language_code'];
 
@@ -15,13 +15,7 @@ class ControllerModuleLanguage extends Controller {
 
 		$this->data['text_language'] = $this->language->get('text_language');
 
-		if (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) {
-			$connection = 'SSL';
-		} else {
-			$connection = 'NONSSL';
-		}
-
-		$this->data['action'] = $this->url->link('module/language', '', $connection);
+		$this->data['action'] = $this->url->link('module/language');
 
 		$this->data['language_code'] = $this->session->data['language'];
 
@@ -42,7 +36,6 @@ class ControllerModuleLanguage extends Controller {
 		}
 
 		if (!isset($this->request->get['route'])) {
-			$this->data['redirect'] = $this->url->link('common/home');
 			foreach($this->data['languages'] as $i => $language) {
 				$this->data['languages'][$i]['redirect'] = $this->url->link('common/home', '', 'NONSSL', $language['code']);
 			}
@@ -61,8 +54,11 @@ class ControllerModuleLanguage extends Controller {
 				$url = '&' . urldecode(http_build_query($data, '', '&'));
 			}
 
-			$this->data['redirect'] = $this->url->link($route, $url, $connection);
-
+			if (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) {
+				$connection = 'SSL';
+			} else {
+				$connection = 'NONSSL';
+			}
 			foreach($this->data['languages'] as $i => $language) {
 				$this->data['languages'][$i]['redirect'] = $this->url->link($route, $url, $connection, $language['code']);
 			}

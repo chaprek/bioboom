@@ -1,23 +1,26 @@
 <?php echo $header; ?><?php echo $column_right; ?>
 
 
-
     <div id="main">
         <div class="wrapper" role="main">
             <div class="container">
                 <div class="page">
                     <div class="breadcrumbs">
                           <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-    <?php echo $breadcrumb['separator']; ?><a href="<?php echo $breadcrumb['href']; ?>"  class="crumb"><?php echo $breadcrumb['text']; ?></a>
-    <?php } ?>
+                            <?php echo $breadcrumb['separator']; ?><a  <? if(!empty($breadcrumb['href'])){ ?> href="<?php echo $breadcrumb['href']; ?>"<? } ?> class="crumb"><?php echo $breadcrumb['text']; ?></a>
+                          <?php } ?>
                     </div>
                     <div class="main-content clearfix">
                         <?php echo $column_left; ?>
                         <div class="big-side">
                         <?php echo $content_top; ?>
                             <div class="category-pict">
-                                <img src="<?php echo $thumb; ?>" alt="">
+                                <?php if (!empty($thumb)) { ?>
+                                <img src="<?php echo $thumb; ?>" alt=""/>
+                                <?php } ?>
                             </div>
+                            
+                            <div class="cat-title"><h1><?php echo ($second_title)?$second_title:$heading_title; ?></h1> <span class="count">(<?= $product_total?>)</span></div>
                             <div class="catalog-filters">
                                 <div class="view-mode">
                                     <a href="#" class="list" id="list"></a>
@@ -54,24 +57,43 @@
                                     </div>
                                 </div>
                             </div>
-                            <h2 class="cat-title"><?php echo $heading_title; ?> <span class="count">(56)</span></h2>
+                            
+                            <div class="pagenav">
+                              <?php echo $pagination; ?>
+                              </div>
+                              
                             <div class="catalog grid catalog-page">
                                 <div class="items">
                                 <?php foreach ($products as $product) { ?>
                                     <article class="item">
-                                    
                                     <?php if ($product['thumb']) { ?>
-                                        <a href="<?php echo $product['href']; ?>" class="thumb">
-                                            <img src="<?php echo $product['thumb']; ?>"  title="<?php echo $product['name']; ?>" alt="<?php echo $product['name']; ?>" />
+                                        <a href="<?php echo "/".str_replace( HTTP_SERVER,"",$product['href']); ?>" class="thumb">
+                                            <div>
+                                            
+                                    <div class="<?= $product['mark']?>"></div>
+                                            <img src="<?php echo $product['thumb']; ?>"  title="<?php echo $product['name']; ?> в БиоБутике" alt="<?php echo $product['name']; ?>" />
+                                            </div>
                                         </a>
                                     <?php } ?>
                                     
                                         <div class="content">
-                                            <h3><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></h3>
+                                            <span><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></span>
                                             <div class="excerpt"><?php echo $product['description']; ?></div>
-                                            <div class="price"><?php echo $product['price']; ?></div>
-                                            <a onclick="addToCart('<?php echo $product['product_id']; ?>');" class="add-to-cart" title="<?php echo $button_cart; ?>"></a>
+                                            <div class="price">
+                                            <?php if (!$product['special']) { ?>
+                                            <?php echo $product['price']; ?>
+                                            <?php } else { ?>
+                                            <span class="through"><?php echo $product['price']; ?></span> <span class="price-new"><?php echo $product['special']; ?></span>
+                                            <?php } ?>
+                                            
+                                            </div>
+                                            <? if($product['in_stock']){?>
+                                            <a onclick="addToCart('<?php echo $product['product_id']; ?>'); ga('send', 'event', 'Buy', 'Catalog', '<?= $product['name']; ?>');" class="add-to-cart" title="<?php echo $button_cart; ?>"></a>
+                                            <? } else {?>
+                                            <a href="<?php echo $product['href']; ?>" class="add-to-cart disable" title="<?php echo $button_cart; ?>"></a>
+                                            <? }?>
                                         </div>
+                                        <div class="clear"></div>
                                     </article>
                                <?php } ?>     
                                     
@@ -88,6 +110,10 @@
                                 <div class="right"><a href="<?php echo $continue; ?>" class="button"><?php echo $button_continue; ?></a></div>
                               </div>
                               <?php } ?>
+                              
+                              <div class="good_text">
+                              <?= $description_seo?>
+                              </div>
                               
                               <?php echo $content_bottom; ?></div>
                             </div>

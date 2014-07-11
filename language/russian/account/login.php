@@ -3,7 +3,7 @@
 $_['heading_title']	                   = 'Логин';
 
 // Text
-$_['text_account']					   = 'Личный Кабинет';
+$_['text_account']					   = 'Мой профиль';
 $_['text_login']					   = 'Логин';
 $_['text_new_customer']				   = 'Новый клиент';
 $_['text_register']                    = 'Регистрация';

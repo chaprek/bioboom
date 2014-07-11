@@ -17,7 +17,7 @@ class ControllerCommonColumnRight extends Controller {
 			} else {
 				$this->data['reques'] = '';
 			}
-		
+		$this->data['logged'] = $this->customer->isLogged();
 		$layout_id = 0;
 		
 		if ($route == 'product/category' && isset($this->request->get['path'])) {
@@ -91,6 +91,12 @@ class ControllerCommonColumnRight extends Controller {
 			}
             if ($result['information_id'] > 10 && $result['information_id'] < 14 ) {
 				$this->data['etic'][] = array(
+					'title' => $result['title'],
+					'href'  => $this->url->link('information/information', 'information_id=' . $result['information_id'])
+				);
+			}
+            if ($result['information_id'] == 16) {
+				$this->data['moneyback'] = array(
 					'title' => $result['title'],
 					'href'  => $this->url->link('information/information', 'information_id=' . $result['information_id'])
 				);

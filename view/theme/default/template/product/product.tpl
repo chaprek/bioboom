@@ -1,41 +1,81 @@
 <?php echo $header; ?><?php echo $column_left; ?><?php echo $column_right; ?>
 
+<script type="text/javascript">
+    $(document).ready(function(){
+        var ua = navigator.userAgent.toLowerCase();
+        var isMobile = ua.indexOf("mobile") > -1;
 
+        function createZoom() {
+            $("<link/>",{
+                href:'catalog/view/theme/default/stylesheet/magiczoom.css',
+                rel:'stylesheet'
+            }).insertAfter("link:last");
+
+            $("<script/>",{
+                src:'catalog/view/javascript/magiczoom.js'
+            }).appendTo("body");
+        }
+
+        if (!isMobile) {
+            createZoom();
+        } else if ($(window).width() >= 700) {
+            createZoom();
+        }
+
+    });
+</script>
+<!-- <script src="catalog/view/javascript/magiczoom.js"></script>
+<link rel="stylesheet" href="catalog/view/theme/default/stylesheet/magiczoom.css"> -->
  <div id="main">
         <div class="wrapper" role="main">
             <div class="container">
                 <div class="page">
                 
                     <div class="breadcrumbs">
-                      <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-                    <?php echo $breadcrumb['separator']; ?><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a>
+                    <?php foreach ($breadcrumbs as $breadcrumb) { ?>
+                    <?php echo $breadcrumb['separator']; ?><a <? if(!empty($breadcrumb['href'])){ ?> href="<?php echo $breadcrumb['href']; ?>"<? } ?>><?php echo $breadcrumb['text']; ?></a>
                     <?php } ?>
-                    </div>
+                    </div> 
                     
-<?php echo $content_top; ?>
+                    <?php echo $content_top; ?>
 
-   <div class="main-content clearfix single">
-                        <div class="top-single clearfix">
+                    <div class="main-content clearfix single">
+                        <div class="top-single clearfix" id="product_content">
                             <div class="trade-gallery" id="gallery">
                                                     
                             <?php if ($thumb || $images) { ?>
                                 <div class="preview">
+                                <div class="<?= $mark?> <?= ($special)?"sale":"" ?>"></div>
                                 <?php if ($thumb) { ?>
-                                    <a href="<?php echo $thumb; ?>" rel="fancybox">
-                                        <img src="<?php echo $thumb; ?>" title="<?php echo $heading_title; ?>" alt="<?php echo $heading_title; ?>" />
+                                    <a href="<?=$big_img;?>" rel="fancybox" class="MagicZoom" rel="zoom-width:500px; zoom-height:500px;" id="MagicZoom">
+                                    
+                                        <img id="im" src="<?=$thumb;?>" title="<?php echo $heading_title; ?>  в БиоБутике" alt="<?php echo $heading_title; ?>" />
                                     </a>
                                   <?php } ?>  
                                 </div>
                                 <div class="thumbs-list" id="thumbs">
                                     <div class="thumbs-wrap">
+
                                     <?php if ($images) { ?>
                                         <ul class="thumbs">
-                                            <?php foreach ($images as $image) { ?>
-                                                <li>
-                                                    <a href="<?php echo $image['popup']; ?>" rel="fancybox"><img src="<?php echo $image['thumb']; ?>" title="<?php echo $heading_title; ?>" alt="<?php echo $heading_title; ?>" /></a>
+                                            <?php 
+											$foto_n=0;
+											foreach ($images as $image) { $foto_n++;?>
+                                                <li> 
+                                                    <a rel="zoom-id:MagicZoom" href="<?php echo $image['big_img']; ?>" rel="fancybox"><img src="<?php echo $image['thumb']; ?>" title="<?php echo $heading_title; ?>  в БиоБутике фото <?=$foto_n;?>" alt="<?php echo $heading_title; ?> фото <?=$foto_n;?>" /></a>
                                                 </li>
                                             
                                             <?php } ?>
+                                             <?php if ($thumb) { $foto_n++; ?>
+                                             <li>
+                                                <a rel="zoom-id:MagicZoom" href="<?=$big_img;?>" rel="fancybox">
+                                                    <img src="<?php echo $thumb; ?>" title="<?php echo $heading_title; ?>  в БиоБутике фото <?=$foto_n;?>" alt="<?php echo $heading_title; ?> фото <?=$foto_n;?>" />
+                                                </a>
+                                             </li>
+                                             <?php } ?>
+                                             <?php for ($i = 1; $i <= 2 - count($images); $i++) { ?>
+                                                <li></li>
+                                             <?php } ?>
                                         </ul>
                                          <?php } ?>  
                                         <div class="controls">
@@ -46,69 +86,60 @@
                                 </div>
                                 <?php } ?> 
                             </div>
-
+<!-- <div id="im_zoom" style="position:absolute;width:70%;height:96%;float:right;top:0px;right:0px;"></div>  -->
 
                             <div class="rside-detail">
                                 <h1><?php echo $heading_title; ?></h1>
-                                <div class="size">500 гр / 12 порций</div>
+                                <div class="size">
+                                <? if($chunk){?>
+                                    <?php foreach($chunk['attribute'] as $attr){
+                                        echo $attr['text'];
+                                    } ?>
+                                <? }?>
+                                </div>
+                                <div class="price">
+                                <?php if (!$special) { ?>
+                                    <?php echo $price; ?>
+                                <?php } else { ?>
+                                    <span class="through"><?php echo $price; ?> </span><span class="price-new"><?php echo $special; ?></span>
+                                    <span class="percent" style="display: none;"><?= ($special/$price)  ?></span>
+                                <?php } ?>
+                                </div>
                                 <div class="clearfix">
-                                    <div class="availability yes"> <?php echo $stock; ?></div>
-                                    
-                                    <? if($islogin){?>
-                                    <a onclick="addToWaitlist('<?php echo $product_id; ?>');" class="add-to-wait">+ в лист ожидания</a>
-                                    <? } else {?>
-                                    <a class="wait_show">Сообщить когда появится</a>
+                                    <div class="availability <?= ($in_stock)?"yes":""; ?>" style="<?= ($review_status && $rating > 0)?'':'float: none; text-align: left' ?>;"><?php echo $stock; ?></div>
+                                    <? if(!$in_stock){?>
+                                        <? if($islogin){?>
+                                            <a onclick="addToWaitlist('<?php echo $product_id; ?>');" class="add-to-wait">+ в лист ожидания</a>
+                                        <? } else {?>
+                                            <a class="wait_show">Сообщить когда появится</a>
+                                        <? }?>
                                     <? }?>
-                                    
-                                    <?php if ($review_status) { ?>
+                                    <?php if ($review_status && $rating > 0) { ?>
                                     
                                     <div class="raiting"><div style="width: <?= $rating*20?>%"></div></div>
-                                    <span class="raiting-count"><?php echo $reviews_w; ?></span>
+                                    <span class="raiting-count rews_top"><?php echo $reviews_w; ?></span>
                                     
                                       <?php } ?>
                                     
-                                    
-                                </div>
-                                <div class="price"><?php echo $price; ?></div>
-                                <?php echo $description; ?>
-                                <div class="social clearfix">
-                                    <div class="item vk">
-                                       <!-- <div id="vk_like"></div>
-                                        <script type="text/javascript">
-                                            VK.Widgets.Like("vk_like", {type: "mini"});
-                                        </script>     -->
-                                    </div>
-                                    <div class="item gplus">
-                                        <div class="g-plusone" data-size="medium"></div>
-                                        <script type="text/javascript">
-                                            (function() {
-                                                var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-                                                po.src = 'https://apis.google.com/js/plusone.js';
-                                                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-                                            })();
-                                        </script>
-                                    </div>
-                                    <div class="item twitter"><a href="https://twitter.com/share" class="twitter-share-button">Tweet</a>
-                                        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script></div>
-                                    <div class="item fb">
-                                        <div id="fb-root"></div>
-                                        <script>(function(d, s, id) {
-                                            var js, fjs = d.getElementsByTagName(s)[0];
-                                            if (d.getElementById(id)) return;
-                                            js = d.createElement(s); js.id = id;
-                                            js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1";
-                                            fjs.parentNode.insertBefore(js, fjs);
-                                        }(document, 'script', 'facebook-jssdk'));</script>
-
-                                        <div class="fb-like" data-href="http://developers.facebook.com/docs/reference/plugins/like" data-send="false" data-layout="button_count" data-width="450" data-show-faces="true"></div>
-                                    </div>
                                 </div>
                                 
+                                
+                               <? if(!empty($description_act)){?>
+                                   <div class="desc_act">
+                                   <?= $description_act?>
+                                   </div>
+                               <? }?>
+                               <? if($deliv_plus == 1){?>
+                                   <div class="deliv_rule">
+                                    Данный товар доставляется по Киеву и Киевской области
+                                   </div>
+                               <? }?>
                                 
                                    <div class="trade-features">
                                     <form>
                                     <div class="active">
                                     <input type="hidden" name="product_id" size="2" value="<?php echo $product_id; ?>" />
+                                    <input type="hidden" name="price_opt" class="price_opt" value="0" />
                                      </div>
                                         <ul>
                                             <li class="feature">
@@ -118,45 +149,62 @@
                                                         <input type="text" id="count"  name="quantity" value="<?php echo $minimum; ?>" />
                                                         <button type="button" class="inc"></button>
                                                         <button type="button" class="dec"></button>
-                                                    </div>
+                                                    </div> 
                                                 </div>
                                             </li>
-                                            
+                                            <input type="hidden" name="pure_price" id="pure_price" size="2" value="<?php echo $price_pure; ?>" />
+                                            <input type="hidden" name="pure_price_spec" id="pure_price_spec" size="2" value="<?php echo $price_pure_spec; ?>" />
+                                            <input type="hidden" name="pref" id="pref" size="2" value="<?php echo $pref; ?>" />
+                                            <div id="opt">
                                             <?php if ($options) { ?>
                                             <?php foreach ($options as $option) { ?>
-                                            
                                             <?php if ($option['type'] == 'select') { ?>
                                             <li class="feature">
                                                 <div class="title"><?php echo $option['name']; ?></div>
                                                 <div class="content clearfix">
-                                                    <div class="div-select" id="color">
+                                                    <div class="div-select" id="<?= ($option['option_id'] == 8)?"size":"color"?>">
                                                         <div class="current">
                                                         <span class="text">
-                                                        <? if($option['option_value'][0]['image']){?>
-                                                            <img  width="20" src="<? echo $option['option_value'][0]['image']?>"/>
-                                                            <span>
-                                                                <? echo $option['option_value'][0]['name']?>
-                                                            </span>
-                                                        <? } else {?>
-                                                            <? echo $option['option_value'][0]['name']?>                                                        
-                                                        <? }?>
+                                                        
+                                                        <?php foreach ($option['option_value'] as $opt_val) { ?>
+                                                        
+                                                            <? if($opt_val['price'] == 0){?>
+                                                            
+                                                                <? if(isset($opt_val['image'])){?>
+                                                                    <? if($option['option_id'] == 5 && strpos($opt_val['image'], 'no_image') == false){?>
+                                                                        <img  width="20" src="<? echo $opt_val['image']?>"/>
+                                                                    <? }?>
+                                                                    <span>
+                                                                        <?  if(isset($opt_val['name'])){echo $opt_val['name'];}?>
+                                                                    </span>
+                                                                <? } else {?>
+                                                                    <? if(isset($opt_val['name'])){echo $opt_val['name'];} ?>                                                        
+                                                                <? }?>
+                                                                
+                                                            <? 
+                                                            break;
+                                                            }
+                                                            ?>
+                                                            
+                                                        <?php } ?>
+                                                        
                                                         </span>
                                                         <span class="pointer"></span></div>
-                                                        <ul class="options"  id="option-<?php echo $option['product_option_id']; ?>">
+                                                        <ul class="options" id="option-<?php echo $option['product_option_id']; ?>">
                                                         <? $y=0;?>
                                                                 <?php foreach ($option['option_value'] as $option_value) { ?>
                                                                 
-                                                                <li class="<?= ($y == 0)?'active':''?>">
-                                                                <? if($option_value['image']){?>
-                                                                <img  width="20" src="<?php echo $option_value['image']; ?>"/>
-                                                                <? }?>
-                                                                <input type="hidden" name="option[<?php echo $option['product_option_id']; ?>]" 
-                                                                  value="<?php echo $option_value['product_option_value_id']; ?>" 
-                                                                  id="option-value-<?php echo $option_value['product_option_value_id']; ?>" />
-                                                                  
-                                                                <span><?php echo $option_value['name'] ?></span></li>
-                                                                    
-                                                                  <? $y++;?>
+                                                                    <li data-pref="<?php echo $option_value['price_prefix']; ?>" data-price="<?php echo $option_value['price']; ?>" data-povid="<?php echo $option_value['option_value_id']; ?>" class="<?= ($y == 0)?'active':''?>">
+                                                                    <? if($option_value['image'] && $option['option_id'] == 5  && strpos($option['option_value'][0]['image'], 'no_image') == false){?>
+                                                                    <img  width="20" src="<?php echo $option_value['image']; ?>"/>
+                                                                    <? }?>
+                                                                    <input type="hidden" name="option[<?php echo $option['product_option_id']; ?>]" 
+                                                                      value="<?php echo $option_value['product_option_value_id']; ?>" 
+                                                                      id="option-value-<?php echo $option_value['product_option_value_id']; ?>" />
+                                                                      
+                                                                    <span><?php echo $option_value['name'] ?></span></li>
+                                                                        
+                                                                      <? $y++;?>
                                                                                                                                   
                                                                 <?php } ?>
                                                         </ul>
@@ -167,104 +215,146 @@
                                             <?php } ?>
                                              <?php } ?>
                                               <?php } ?>
-                                            <!--<li class="feature">
-                                                <div class="title">Комплект</div>
-                                                <div class="content clearfix">
-                                                    <div class="div-select" id="complect">
-                                                        <div class="current"><span class="text">майка+леггинсы</span><span class="pointer"></span></div>
-                                                        <ul class="options">
-                                                            <li><span>майка+леггинсы</span></li>
-                                                            <li class="active">
-                                                            
-          
-                                                            <span>трусы+носки</span></li>
-                                                            <li><span>валенки</span></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </li>-->
+                                              </div>
                                         </ul>
                                     </form>
                                 </div>
                                 <div class="clearfix single-controls">         
           
-                                    <a class="add-to-cart"  id="button-cart" >+ моя био-корзина</a>
-                                    <a onclick="addToWishList('<?php echo $product_id; ?>');" class="add-to-favorite">+ в мои желания</a>
+                                    <a class="add-to-cart <?= (!$in_stock)?"grey":""?>"  id="button-cart" onclick="ga('send', 'event', 'Buy', 'Product', '<?= $heading_title; ?>');" ><?= $cart_button?></a>
+                                    <a  <? if($islogin){?>onclick="addToWishList('<?php echo $product_id; ?>');"<? } else {?> href="/login" <? }?> class="add-to-favorite <?= ($islogin)?"":"fancy-login"?> <?= ($inWish)?'inWish':'' ?>" ><?= $wish_button?></a>
                                 </div>
+                                
+                                 <div class="social clearfix">
+                                    <div class="item vk">
+                                       <script type="text/javascript">
+                                      VK.init({apiId: 4004003, onlyWidgets: true});
+                                    </script>
+                                    
+                                    <!-- Put this div tag to the place, where the Like block will be -->
+                                   <div id="vk_like"></div>
+                                    <script type="text/javascript">
+                                    VK.Widgets.Like("vk_like", {type: "mini"});
+                                    </script>
+                                    </div>
+                                    <div class="item gplus">
+                                        <!--<div class="g-plusone" data-size="medium"></div>
+                                       <script type="text/javascript">
+                                            (function() {
+                                                var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+                                                po.src = 'https://apis.google.com/js/plusone.js';
+                                                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+                                            })();
+                                        </script>-->
+                                        <!-- Разместите этот тег в том месте, где должна отображаться кнопка +1 -->
+                                        <g:plusone></g:plusone>
+                                        <script type="text/javascript">
+                                          gapi.plusone.go("product_content");
+                                        </script>
+
+                                    </div>
+                                    <!--<div class="item twitter"><a href="https://twitter.com/share" class="twitter-share-button">Tweet</a>
+                                        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script></div>
+                                    -->
+                                    
+                                    
+                                   <div class="item fb">
+                                    
+                                    <div class="fb-like" data-layout="button_count" data-action="like" data-show-faces="false" data-share="false"></div>
+                                     </div>
+                                </div>
+                                <!--<div class="social_share">
+                                
+                                <p>Рассказать друзьям</p>
+                                
+                                  <script type="text/javascript">(function() {
+                                  if (window.pluso)if (typeof window.pluso.start == "function") return;
+                                  if (window.ifpluso==undefined) { window.ifpluso = 1;
+                                    var d = document, s = d.createElement('script'), g = 'getElementsByTagName';
+                                    s.type = 'text/javascript'; s.charset='UTF-8'; s.async = true;
+                                    s.src = ('https:' == window.location.protocol ? 'https' : 'http')  + '://share.pluso.ru/pluso-like.js';
+                                    var h=d[g]('body')[0];
+                                    h.appendChild(s);
+                                  }})();</script>
+                                <div class="pluso" data-background="#ffffff" data-options="medium,square,line,horizontal,nocounter,theme=04" data-services="facebook,vkontakte,google,twitter"></div> 
+                                </div>-->
+                                
+                                <div class="clear"></div>
                             </div>
                         </div>
                         <div class="mid-single">
+                            <script type="text/javascript">
+                                $(document).ready(function(){
+                                        if ($(document).find("ul.strange-tabs").length > 0 && ($(window).width() > 480)){
+        strangeTabs();
+    }
+                                });
+                            </script>
                             <ul class="strange-tabs">
-                                <li class="tab active">
+                                <li class="tab">
                                     
-                                    <? $j=0;?>
-                                     <?php if ($attribute_groups) { ?>
+                                    <?php //foreach ($attribute_groups as $attribute_group) {  } //атрибуты?>
                                     
-                                          <?php foreach ($attribute_groups as $attribute_group) { ?>
-                                          <? if($attribute_group['attribute_group_id'] == 6) {?>
-                                          <a href="#" class="title"><?php echo $attribute_group['name']; ?></a>
+                                     <?php if ($composition) { ?>
+                                                                              
+                                          <a href="#" class="title"><?php echo $composition['name']; ?></a>
                                           
                                         <div class="tab-content">
                                           
                                           <? $i=0; ?>
-                                            <?php foreach ($attribute_group['attribute'] as $attribute) { ?>
+                                            <?php foreach ($composition['attribute'] as $attribute) { ?>
                                             
-                                          <? if($i==0){?>  
-                                        <div class="big-text"><?= $attribute['text']; ?></div>
-                                        <? } else if($i==1){?>
-                                        <div class="notice"><?= $attribute['text']; ?></div>
-                                         <div class="blue-text">Пищевая ценность на 100 г</div>
-                                        <table class="food-table">
-                                        <? } else {?>
-                                        <tr>
+                                            <? if($i==0){?>  
+                                            <div class="big-text"><?= $attribute['text']; ?></div>
+                                            <? } else if($i==1){?>
+                                            <div class="notice"><?= $attribute['text']; ?></div>
+                                             <div class="blue-text">Пищевая ценность на 100 г</div>
+                                            <table class="food-table">
+                                            <? } else {?>
+                                            <tr>
                                                 <td><?= $attribute['name']; ?></td>
                                                 <td><?= $attribute['text']; ?></td>
                                             </tr>
                                         
-                                        <? }?>
+                                            <? }?>
                                              
                                              <? $i++;?>
                                             <?php } ?>
                                            </table>
                                         </div>
-                                         <? $j++?>
-                                          <?php } ?>
-                                          <?php } ?>
                                       <?php } ?>
                                     
                                     
                                     
                                 </li>
-                                <li class="tab">
+                                <li class="tab active">
                                     <a href="#" class="title">ОПИСАНИЕ</a>
                                     <div class="tab-content">
                                         <?= $description_clear?>
                                     </div>
                                 </li>
                                 
-                                    <?php foreach ($attribute_groups as $attribute_group) { 
-                                     
-                                     if($attribute_group['attribute_group_id'] == 3){?>
+                                    <?php if($care){?>
                                      <li class="tab">
                                     <a href="#" class="title">
-                                     <?= $attribute_group['name']; ?>
+                                     <?= $care['name']; ?>
                                       </a>
                                     <div class="tab-content">
-                                        <p>Хранить очень аккуратно в прохладном месте и подальше от моли.</p>
-                                        <p>Температура хранения: от сих до сих</p>
+                                        <p><?= $care['attribute'][0]['text']; ?></p>
                                         
                                     </div>
                                 </li>
-                                     
-                                     
-                                     <?}
-                                     
-                                     } ?>
+                                     <?} ?>
                                    
                                 <li class="tab">
                                     <a href="#" class="title">Сертификаты</a>
                                     <div class="tab-content">
                                     
+                                    <? if($certificates){?>
+                                         <?php foreach ($certificates['attribute'] as $certificate) { ?>
+                                            <img src="image/data/certificate/<?php echo $certificate['attribute_id'] ?>.jpg" alt="<?php echo $certificate['name'] ?>" title="<?php echo $certificate['name'] ?>" />
+                                        <? }?>
+                                    <? }?>
                                      <?php if ($options) { ?>
                                             <?php foreach ($options as $option) { ?>
                                             
@@ -285,25 +375,27 @@
                                     </div>
                                 </li>
                                 <li class="tab">
-                                    <a href="#" class="title">Отзывы (<?= $review_total ?>)</a>
+                                    <a href="#" id="rews" class="title">Отзывы (<?= $review_total ?>)</a>
                                     <div class="tab-content">
                                         <div class="clearfix">
-                                            <span class="feed-count"><?= $review_total ?> отзывов</span>
+                                            <span class="feed-count">отзывов: <?= $review_total ?> </span>
                                             <a href="#" class="add-feedback" data-id="0">Оставить отзыв</a>
                                         </div>
                                         <div id="review-title">
                                         </div>
                                         <ul class="feedbacks-list" id="review">
-                                        
-                                 <?php if ($revs) { ?>
+                                        <?php if ($revs) { ?>
                                             <?= $revs ?>
-                                            <div class="pagination" style="text-align: center;"><?php echo $pagination; ?> <a href="<?php echo $all_review; ?>" class="all_review">Все отзывы</a></div>
+                                            <div class="pagination" style="text-align: center;"><?php echo $pagination; ?> 
+											<div data-href="<?php echo $all_review; ?>" class="all_review">Все отзывы</div>
+											</div>
                                         <?php } else { ?>
                                             <div class="content"><?php echo $text_no_reviews; ?></div>
                                         <?php } ?>
                                         </ul>
                                     </div>
                                 </li>
+                                <? if($is_tables == 1){?>
                                 <li class="tab">
                                     <a href="#" class="title">Таблица размеров</a>
                                     <div class="tab-content">
@@ -648,40 +740,46 @@
                                         </ul>
                                     </div>
                                 </li>
+                                
+                                <? }?>
                             </ul>
                         </div>
-                    <section class="index-promo">
-                            <h2>ГОТОВИМ ОРГАНИЧНО</h2>
-                            <div class="recipes noslide-list">
+                          <?php if ($products) { ?>
+                          <section class="catalog catalog-slider index-promo" id="popular-slider">
+                            <h2>ПОДОБНЫЕ ТОВАРЫ</h2>
+                            <div class="trades">
+                            <?php foreach ($products as $product) { ?>
+                            
                                 <div class="item">
-                                    <a href="#" class="thumb">
-                                        <img src="images/articles/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="desc">
-                                        <h3><a href="#">Каша из топора</a></h3>
-                                        <div class="excerpt">Приготовьте томаты, базилик, петрушку, чеснок и сыр, как указано в инструкции. Приготовьте томаты,</div>
+                                 <?php if ($product['thumb']) { ?>
+                                    <div class="thumb div-link" data-href="<?php echo "/".str_replace( HTTP_SERVER,"",$product['href']); ?>">
+                                        <div>
+                                        <img src="<?php echo $product['thumb']; ?>" alt="">
+                                        </div>
                                     </div>
+                                 <?php } ?>
+                                 
+                                 <? if($product['rating'] > 0){?>
+                                     <div class="rat_rev">
+                                        <div class="raiting"><div style="width: <?= $product['rating']*20?>%"></div></div><span class="rev_min"><?= $product['reviews']?></span><br/>
+                                     </div>   
+                                 <? }?>
+                                    
+                                    <span><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></span>
+                                    <?php if ($product['price']) { ?>
+                                    <div class="price"><?php echo $product['price']; ?></div>
+                                    <?php } ?>
+                                    
+                                    <a class="add-to-cart" onclick="addToCart('<?php echo $product['product_id']; ?>'); ga('send', 'event', 'Buy', 'Cross', '<?= $product['name']; ?>');" title="<?php echo $button_cart; ?>"></a>
                                 </div>
-                                <div class="item">
-                                    <a href="#" class="thumb">
-                                        <img src="images/articles/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="desc">
-                                        <h3><a href="#">Каша из топора</a></h3>
-                                        <div class="excerpt">Приготовьте томаты, базилик, петрушку, чеснок и сыр, как указано в инструкции. Приготовьте томаты,</div>
-                                    </div>
-                                </div>
-                                <div class="item">
-                                    <a href="#" class="thumb">
-                                        <img src="images/articles/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="desc">
-                                        <h3><a href="#">Каша из топора</a></h3>
-                                        <div class="excerpt">Приготовьте томаты, базилик, петрушку, чеснок и сыр, как указано в инструкции. Приготовьте томаты,</div>
-                                    </div>
-                                </div>
+                           <?php } ?>
                             </div>
+                            <span class="control prev" title=""></span>
+                            <span class="control next" title=""></span>
                         </section>
+                          <?php } ?>
+                          
+                   
                         <?php echo $content_bottom; ?>
                     </div>
                 </div>
@@ -691,13 +789,17 @@
         <div class="pop_up">
         <h3>Сообщить, <br /> когда появится в продаже</h3>
         <form action="" >
+        <span class="err_name"></span>
+        <span class="err_email"></span>
+        
         <label>Имя</label><br />
         <input type="text" name="name" id="name" value=""  />
         <label>Email</label><br />
         <input type="text" name="email" id="email" value=""  />
         <input type="hidden" value="<?php echo $product_id; ?>" name="product_id" />
+        
         <a class="pop_click">Отправить</a>
-        <a>Отмена</a>
+        <a class="pop_cancel">Отмена</a>
         
         </form>
         </div>
@@ -707,17 +809,23 @@
 
 
 <script type="text/javascript"><!--
-$('.colorbox').colorbox({
+/*-$('.colorbox').colorbox({
 	overlayClose: true,
 	opacity: 0.5
-});
+});-*/
 //--></script> 
 <script type="text/javascript"><!--
+
+
+$("#opt").load("index.php?route=product/product/product_option&product_id=<?php echo $product_id; ?>&option_1=&option_2=  > *");
+
 
 $('.wait_show').click(function(){
    $('.pop_up').fadeIn(); 
 });
-
+$('.pop_cancel').click(function(){
+   $('.pop_up').fadeOut(); 
+});
 /*-$('.trade-features input[type=\'text\'], .trade-features .active input[type=\'hidden\'], .trade-features input[type=\'radio\']:checked, .trade-features input[type=\'checkbox\']:checked, .trade-features select, .trade-features textarea').css('color', 'green');-*/
 $('.pop_click').live('click', function() {
 	$.ajax({
@@ -730,51 +838,118 @@ $('.pop_click').live('click', function() {
 						
 			if (json['success']) {
 			 
-                $('.pop_up').html(json['success']).delay(4000).fadeOut(500);
-             
+                $('.pop_up').delay(10).fadeOut(500);//.html(json['success'])
+                $('.wait_show').css('color', '#BBD569').html('V Сообщить когда появится');
+                
+             /*-
 				$('#notification').html('<div class="success" style="display: none;">' + json['success'] + '<img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>');
 				
 				$('.success').fadeIn('slow');
 				
 				$('#wishlist-total').html(json['total']);
 				
-				$('html, body').animate({ scrollTop: 0 }, 'slow');
+				$('html, body').animate({ scrollTop: 0 }, 'slow');-*/
+			} else {
+			 $('.err_name').html(json['name']);
+             $('.err_email').html(json['email']);
 			}	
 		}
 	});
 });
 
-$('#button-cart').bind('click', function() {
-	$.ajax({
-		url: 'index.php?route=checkout/cart/add',
+$('ul.options li').live('click', function() {
+    /*-$('#pure_price').val(parseFloat(parseFloat($(this).attr('data-price')) + parseFloat($('#pure_price').val())).toFixed(2));-*/
+    /*-$('.price').html($(this).attr('data-price') + $(this).attr('data-pr'));-*/
+}, function(){
+    var val_2 = "";
+    var price = parseFloat($(this).attr('data-price'));
+    $('ul.options li.active').not($(this).parent().find('li')).each(function(){
+        price += parseFloat($(this).attr('data-price'));
+        val_2 = $(this).attr('data-povid');
+    });
+    
+    //$('.price').html(parseFloat(price + parseFloat($('#pure_price').val())).toFixed(2) + $('#pref').val());
+    if($(this).parent().parent().attr('id') == "color"){
+        $("#opt").load("index.php?route=product/product/product_option&product_id=<?php echo $product_id; ?>&option_1=" + $(this).attr('data-povid') +"&option_2=" + val_2 + "  > *");
+    }
+    
+   	$.ajax({
+		url: 'index.php?route=product/product/product_option_price',
 		type: 'post',
-		data: $('.trade-features input[type=\'text\'], .trade-features .active input[type=\'hidden\'], .trade-features input[type=\'radio\']:checked, .trade-features input[type=\'checkbox\']:checked, .trade-features select, .trade-features textarea'),
+		data: 'product_id=<?php echo $product_id; ?>&option_1='  + $(this).attr('data-povid') +'&option_2=' + val_2,
 		dataType: 'json',
 		success: function(json) {
-		  
-			$('.success, .warning, .attention, information, .error').remove();
-			
-			if (json['error']) {
-				if (json['error']['option']) {
-					for (i in json['error']['option']) {
-						$('#option-' + i).after('<span class="error">' + json['error']['option'][i] + '</span>');
-					}
-				}
-			} 
-			if (json['success']) {
-                
-                $('.mini-cart').load('index.php?route=module/cart *');
-                
-				$('#notification').html('<div class="success" style="display: none;">' + json['success'] + '<img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>');
-					
-				$('.success').fadeIn('slow');
-					
-				$('#cart-total').html(json['total']);
-				
-				$('html, body').animate({ scrollTop: 0 }, 'slow'); 
-			}	
-		} 
+		
+        var price_new = parseFloat(json['price']).toFixed(2);
+        var pric_c = parseFloat($('#pure_price').val()).toFixed(2);
+        var pric_c_s = parseFloat($('#pure_price_spec').val()).toFixed(2);
+        var pric = parseFloat(1*pric_c + 1*price_new);
+        
+        if($('.price span').length == 0){
+            $('.price').html(pric.toFixed(2) + $('#pref').val());
+            $('.price_opt').val(1*price_new);
+        } else {
+            var pers = parseFloat($('.percent').text());
+            var pric_s = parseFloat(1*pric_c_s + 1*price_new*pers);
+           /*- alert(pric_s);-*/
+            $('.price .through').html((1*pric_c + 1*price_new).toFixed(2) + $('#pref').val());
+            $('.price .price-new').html((pric*pers).toFixed(2) + $('#pref').val());
+            $('.price_opt').val((1*pric_s - pric_c_s).toFixed(2));
+        }
+        
+               /*- $('#top_cart').load('index.php?route=module/cart > *', function(){
+                    $('.recipe-products').show();
+                 });-*/
+         /*-through price-new percent-*/
+        	
+		}
 	});
+    
+    
+    
+});
+
+$('#button-cart').bind('click', function() {
+    <? if($in_stock){?>
+    	$.ajax({
+    		url: 'index.php?route=checkout/cart/add',
+    		type: 'post',
+    		data: $('.trade-features input[type=\'text\'], .trade-features .active input[type=\'hidden\'], .trade-features input[type=\'radio\']:checked, .trade-features input[type=\'checkbox\']:checked, .trade-features select, .trade-features textarea'),
+    		dataType: 'json',
+    		success: function(json) {
+    		  
+    			$('.success, .warning, .attention, information, .error').remove();
+    			
+    			if (json['error']) {
+    				if (json['error']['option']) {
+    					for (i in json['error']['option']) {
+    						$('#option-' + i).after('<span class="error">' + json['error']['option'][i] + '</span>');
+    					}
+    				}
+    			} 
+    			if (json['success']) {
+                    
+                    
+                    /*-$('.mini-cart').load('index.php?route=module/cart *');-*/
+                     $('#top_cart').load('index.php?route=module/cart > *', function(){
+                        
+                        $('#cart_pop_up').show(100, function(){
+                            recipeProducts();                 
+                        });
+                     });
+                    
+    				$('#notification').html('<div class="success" style="display: none;">' + json['success'] + '<img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>');
+    					
+    				$('.success').fadeIn('slow');
+    					
+    				$('#cart-total').html(json['total']);
+    				
+    				$('html, body').animate({ scrollTop: 0 }, 'slow'); 
+                    
+    			}	
+    		} 
+    	});
+    <? }?>
 });
 //--></script>
 <?php if ($options) { ?>
@@ -825,6 +1000,18 @@ $('.pagination a').live('click', function() {
 	
 	return false;
 });	
+$('#review .pagination > .all_review').click( function() {
+
+	$('#review').fadeOut('slow');
+		
+	$('#review').load($(this).attr("data-href"), function(){
+	   strangeTabs();   
+	});
+	
+	$('#review').fadeIn('slow');
+	
+	return false;
+});	
 		
 
 /*-$('#review').load('index.php?route=product/product/review&product_id=<?php echo $product_id; ?>');-*/
@@ -857,6 +1044,7 @@ $('.useful a').live('click', function() {
 
 
 
+
 $('.btn-submit-gray').live('click', function() {
 	$.ajax({
 		url: 'index.php?route=product/product/write&product_id=<?php echo $product_id; ?>&rating=' + $('.feedback-form .raiting span').attr('data-rating'),
@@ -875,6 +1063,12 @@ $('.btn-submit-gray').live('click', function() {
 		success: function(data) {
 			if (data['error']) {
 				$('#review-title').after('<div class="warning">' + data['error'] + '</div>');
+                $('[name=name], [name=text]').css('borderColor', '#cccccc');
+                if(data['errorname']){
+                    $('[name=name]').css('borderColor', '#cc3333 ');
+                } else if(data['errortext']){
+                    $('[name=text]').css('borderColor', '#cc3333 ');
+                }
 			}
 			
 			if (data['success']) {
@@ -889,20 +1083,14 @@ $('.btn-submit-gray').live('click', function() {
 });
 //--></script> 
 
-<script type="text/javascript"><!--
-/*-$('#tabs a').tabs();-*/
-//--></script> 
-<script type="text/javascript" src="catalog/view/javascript/jquery/ui/jquery-ui-timepicker-addon.js"></script> 
-<script type="text/javascript"><!--
-/*-if ($.browser.msie && $.browser.version == 6) {
-	$('.date, .datetime, .time').bgIframe();
-}
 
-$('.date').datepicker({dateFormat: 'yy-mm-dd'});
-$('.datetime').datetimepicker({
-	dateFormat: 'yy-mm-dd',
-	timeFormat: 'h:m'
-});
-$('.time').timepicker({timeFormat: 'h:m'});-*/
-//--></script> 
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
 <?php echo $footer; ?>

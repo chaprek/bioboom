@@ -66,11 +66,55 @@ class ControllerAccountReturn extends Controller {
 		$results = $this->model_account_return->getReturns(($page - 1) * 10, 10);
 		
 		foreach ($results as $result) {
+		  
+          	$product_total = $this->model_account_order->getTotalOrderProductsByOrderId($result['order_id']);
+			$voucher_total = $this->model_account_order->getTotalOrderVouchersByOrderId($result['order_id']);
+            
+            $this->data['products'] = array();            
+            
+            $order_info = $this->model_account_order->getOrder($result['order_id']);
+            
+            $products = $this->model_account_order->getOrderProducts($result['order_id']);
+
+      		foreach ($products as $product) {
+				$option_data = array();
+				
+				$options = $this->model_account_order->getOrderOptions($result['order_id'], $product['order_product_id']);
+
+         		foreach ($options as $option) {
+          			if ($option['type'] != 'file') {
+						$value = $option['value'];
+					} else {
+						$value = utf8_substr($option['value'], 0, utf8_strrpos($option['value'], '.'));
+					}
+					
+					$option_data[] = array(
+						'name'  => $option['name'],
+						'value' => (utf8_strlen($value) > 20 ? utf8_substr($value, 0, 20) . '..' : $value)
+					);					
+        		}
+                
+
+        		$this->data['products'][] = array(
+          			'name'     => $product['name'],
+          			'model'    => $product['model'],
+          			'option'   => $option_data,
+          			'quantity' => $product['quantity'],
+          			'price'    => $this->currency->format($product['price'] + ($this->config->get('config_tax') ? $product['tax'] : 0), $order_info['currency_code'], $order_info['currency_value']),
+					'total'    => $this->currency->format($product['total'] + ($this->config->get('config_tax') ? ($product['tax'] * $product['quantity']) : 0), $order_info['currency_code'], $order_info['currency_value']),
+					'return'   => $this->url->link('account/return/insert', 'order_id=' . $order_info['order_id'] . '&product_id=' . $product['product_id'], 'SSL')
+        		);
+                }
+            
+          
 			$this->data['returns'][] = array(
 				'return_id'  => $result['return_id'],
 				'order_id'   => $result['order_id'],
 				'name'       => $result['firstname'] . ' ' . $result['lastname'],
 				'status'     => $result['status'],
+                'product'   => ($product_total + $voucher_total),
+                'products'   => $this->data['products'],                
+				'total'      => $this->currency->format($result['total'], $result['currency_code'], $result['currency_value']),                
 				'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
 				'href'       => $this->url->link('account/return/info', 'return_id=' . $result['return_id'] . $url, 'SSL')
 			);

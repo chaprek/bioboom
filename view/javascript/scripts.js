@@ -3,6 +3,78 @@ var fakeMenu;
 var subW;
 var subH;
 
+function callPlayer(frame_id, func, args) {
+    if (window.jQuery && frame_id instanceof jQuery) frame_id = frame_id.get(0).id;
+    var iframe = document.getElementById(frame_id);
+    if (iframe && iframe.tagName.toUpperCase() != 'IFRAME') {
+        iframe = iframe.getElementsByTagName('iframe')[0];
+    }
+    // When the player is not ready yet, add the event to a queue
+    // Each frame_id is associated with an own queue.
+    // Each queue has three possible states:
+    //  undefined = uninitialised / array = queue / 0 = ready
+    if (!callPlayer.queue) callPlayer.queue = {};
+    var queue = callPlayer.queue[frame_id],
+        domReady = document.readyState == 'complete';
+
+    if (domReady && !iframe) {
+        // DOM is ready and iframe does not exist. Log a message
+        window.console && console.log('callPlayer: Frame not found; id=' + frame_id);
+        if (queue) clearInterval(queue.poller);
+    } else if (func === 'listening') {
+        // Sending the "listener" message to the frame, to request status updates
+        if (iframe && iframe.contentWindow) {
+            func = '{"event":"listening","id":' + JSON.stringify(''+frame_id) + '}';
+            iframe.contentWindow.postMessage(func, '*');
+        }
+    } else if (!domReady || iframe && (!iframe.contentWindow || queue && !queue.ready)) {
+        if (!queue) queue = callPlayer.queue[frame_id] = [];
+        queue.push([func, args]);
+        if (!('poller' in queue)) {
+            // keep polling until the document and frame is ready
+            queue.poller = setInterval(function() {
+                callPlayer(frame_id, 'listening');
+            }, 250);
+            // Add a global "message" event listener, to catch status updates:
+            messageEvent(1, function runOnceReady(e) {
+                var tmp = JSON.parse(e.data);
+                if (tmp && tmp.id == frame_id && tmp.event == 'onReady') {
+                    // YT Player says that they're ready, so mark the player as ready
+                    clearInterval(queue.poller);
+                    queue.ready = true;
+                    messageEvent(0, runOnceReady);
+                    // .. and release the queue:
+                    while (tmp = queue.shift()) {
+                        callPlayer(frame_id, tmp[0], tmp[1]);
+                    }
+                }
+            }, false);
+        }
+    } else if (iframe && iframe.contentWindow) {
+        
+        // When a function is supplied, just call it (like "onYouTubePlayerReady")
+        if (func.call){ 
+            
+            alert('gg');
+            return func()}
+        // Frame exists, send message
+        iframe.contentWindow.postMessage(JSON.stringify({
+            "event": "command",
+            "func": func,
+            "args": args || [],
+            "id": frame_id
+        }), "*");
+    }
+    /* IE8 does not support addEventListener... */
+    function messageEvent(add, listener) {
+        var w3 = add ? window.addEventListener : window.removeEventListener;
+        w3 ?
+            w3('message', listener, !1)
+            :
+            (add ? window.attachEvent : window.detachEvent)('onmessage', listener);
+    }
+}
+
 function mainMenu(){
     if (!$(window).width()<=480) {
         var cW = 0;
@@ -12,9 +84,13 @@ function mainMenu(){
         var m = Math.floor(($("#main-menu .menu").width() - cW)/($("#main-menu li.top-level").length - 1));
         if ( m >= 0) {
             $("#main-menu li.top-level").each(function(){
-                if ($(this).index() != ($("#main-menu li.top-level").length - 1)) $(this).css("margin-right", m);
+                if ($(this).index() != ($("#main-menu li.top-level").length - 1)) $(this).css("margin-right", m-1);
             });
         }
+    } 
+    
+    if($(window).width()<=480) {
+        $("#main-menu").addClass('mini_menu');
     }
 }
 
@@ -149,11 +225,21 @@ function recipeProducts(){
             "width": 760,
             "margin-left": -380
         });
+        if ($(".popup-window").hasClass("auth-popup")) $(".auth-popup").css({
+            "width": 600,
+            "margin-left": -300
+        });
     } else {
         $(".popup-window").css({
             "width": $(window).width() - 30,
             "margin-left": - ($(window).width() - 30)/2
         });
+        if ($(window).width() > 640){
+            if ($(".popup-window").hasClass("auth-popup")) $(".auth-popup").css({
+                "width": 600,
+                "margin-left": -300
+            });
+        }
     }
 
     if ($(document).find("recipe-products").length){
@@ -186,42 +272,47 @@ function recipeProducts(){
 var fCol;
 var vis;
 var visF;
+var tradesScroll = 1;
 var subCol;
 
 var ua = navigator.userAgent.toLowerCase();
 var isMobile = ua.indexOf("mobile") > -1;
 var isAndroid = ua.indexOf("android") > -1;
 
+               $(document).ready(function(){
+                    mainMenu();
+               });
 $(window).load(function(){
 
     if ($(window).width()<=480) {
         vis = 1;
         fCol = 1;
+        tradesScroll = 1;
     } else if ($(window).width()<680){
         fCol = 3;
         vis = 2;
         subCol = 3;
     } else if ($(window).width()<1024) {
         vis = 3;
-        visF = 2;
+        visF = 1;
         fCol = 3;
         subCol = 4;
     } else {
         vis = 4;
-        visF = 1;
+        visF = 2;
         fCol = 4;
         subCol = 3;
     }
 
     mainMenu();
 
-    fMenu = $(".footer-inner").innerHeight();
+    /*fMenu = $(".footer-inner").innerHeight();
     fakeMenu = $("<div class='footer-fake'></div>");
     $("#footer .footer-row").each(function(){
         fakeMenu.append($(this));
-    });
+    });*/
 
-    footerMenu(fCol);
+    /*footerMenu(fCol);*/
 
     resizeFooter();
 
@@ -260,18 +351,23 @@ $(window).load(function(){
                     height: "variable"
                 },
                 scroll: {
-                    items: 1
+                    items: tradesScroll,
+                    duration        : 1000,                         
+                    pauseOnHover    : true
                 },
                 width: "100%",
                  next: "#top-slider .next",
                  prev: "#top-slider .prev",
-                auto: false,
+                auto: {
+                    play: true,
+                    delay: 7000
+                },
                 swipe:{
                     onTouch: true,
                     onMouse: true,
                     duration: 300
                 }
-            });
+            });   
         }
 
         if (document.getElementById("popular-slider")){
@@ -282,16 +378,21 @@ $(window).load(function(){
                     height: "variable"
                 },
                 scroll: {
-                    items: 1
+                    items: tradesScroll,
+                    duration        : 1000,                         
+                    pauseOnHover    : true
                 },
                 width: "100%",
                 next: "#popular-slider .next",
                 prev: "#popular-slider .prev",
-                auto: false,
+                auto: {
+                    play: true,
+                    delay: 7000
+                },
                 swipe:{
                     onTouch: true,
                     onMouse: true,
-                    duration: 300
+                    duration: 10000
                 }
             });
         }
@@ -301,6 +402,7 @@ $(window).load(function(){
     if (document.getElementById("feedbacks-slider")){
         $("#feedbacks-slider .slides").carouFredSel({
             responsive: true,
+            align: "left",
             items:{
                 visible: visF,
                 height: "variable"
@@ -331,10 +433,6 @@ $(window).load(function(){
         });
     }
 
-    if ($(document).find("ul.strange-tabs").length > 0 && ($(window).width() > 480)){
-        strangeTabs();
-    }
-
     $(".div-link").click(function(){
         window.location.href = $(this).attr("data-href");
     });
@@ -358,9 +456,31 @@ $(window).load(function(){
                     "width": inW
                 }, 300);
                 return false;
+            } else {
+                
+                	/* Search */
+            		url = $('base').attr('href') + 'index.php?route=product/search';
+            				 
+            		var filter_name = $('input[name=\'filter_name\']').attr('value');
+            		
+            		if (filter_name) {
+            			url += '&filter_name=' + encodeURIComponent(filter_name);
+            		}
+            		
+            		location = url;
+                
             }
         } else {
-            $(".search-form").submit();
+            	/* Search */
+        		url = $('base').attr('href') + 'index.php?route=product/search';
+        				 
+        		var filter_name = $('input[name=\'filter_name\']').attr('value');
+        		
+        		if (filter_name) {
+        			url += '&filter_name=' + encodeURIComponent(filter_name);
+        		}
+        		
+        		location = url;
         }
     });
 
@@ -393,10 +513,13 @@ $(window).load(function(){
                 } else {
                     if (clicked.parents("div").hasClass("submenu")) {} else {
                         liElem.removeClass("hover").find(".submenu").hide();
+            
                     }
                 }
                 return false;
-            } else {}
+            } else {
+                
+            }
         });
 
     } else {
@@ -461,6 +584,7 @@ $(window).load(function(){
                 $(".menu-toggle").removeClass("open");
                 $("#main-menu .menu").slideUp(300, function(){
                     $("#main-menu .menu").removeAttr("style");
+                    $('.divider_mini').removeClass('show');
                 });
             }
         }
@@ -471,6 +595,13 @@ $(window).load(function(){
     $(".menu-toggle").click(function(){
         $(this).toggleClass("open");
         $("#main-menu .menu").width($("#header .bottom-section").width());
+        /*-if($('.divider_mini').css('display') == 'none'){
+            $('.divider_mini').css('display', 'block');
+        } else {
+            $('.divider_mini').css('display', 'none');
+        }-*/
+        
+        $('.divider_mini').toggleClass('show');
         $("#main-menu .menu").slideToggle(200, function(){
             if (!$(".menu-toggle").hasClass("open")) $("#main-menu .menu").removeAttr("style");
         });
@@ -499,7 +630,9 @@ $(window).load(function(){
     });
 
     $("#scroll-top").click(function(){
-        $.scrollTo("#header",500);
+
+       $('html, body').animate({scrollTop:0},{duration: 500});
+/*	   $.scrollTo("#header",500);*/
     });
 
     $(".view-mode a").click(function(){
@@ -513,7 +646,13 @@ $(window).load(function(){
     $(".catalog-menu li.top-level a.top-level").click(function(){
         $(".catalog-menu li.top-level").not($(this).parent()).removeClass("active");
         $(this).parent().toggleClass("active");
-        return false;
+        
+        var tt = $(this).parent().find('ul');
+        
+        if(tt.length > 0){
+            return false;
+        }
+        
     });
 
     $(".sort-title").click(function(){
@@ -530,10 +669,12 @@ $(window).load(function(){
                 visible: 3,
                 height: "variable"
             },
+            align: "left",
             scroll: {
                 items: 1
             },
             width: "100%",
+            height: "auto",
             next: "#thumbs .next",
             prev: "#thumbs .prev",
             auto: false,
@@ -545,6 +686,15 @@ $(window).load(function(){
         });
 
         function thumbClick(elem){
+		/*var big_img=elem.attr("data-zoomsrc1");
+		//$("#im_zoom .mojozoom_img").attr("src",big_img);
+		MojoZoom.makeZoomable(  
+    document.getElementById("im"),   
+    big_img,  
+    document.getElementById("im_zoom"),  
+    150, 150,  
+    true  
+);  */
             $("#gallery .preview a").attr("href",elem.attr("href"));
             $("#gallery .preview img").attr("src", elem.attr("href"));
         }
@@ -553,7 +703,6 @@ $(window).load(function(){
             thumbClick($(this));
             return false;
         });
-
 
         $("#gallery .preview a").click(function(e){
             if ($(window).width()>480) {
@@ -610,6 +759,21 @@ $(window).load(function(){
             });
         }
         if ($(window).width() > 480) strangeTabs();
+        return false;
+    });
+    
+    $(".rews_top").click(function(){
+        $('#rews').parent().siblings().removeClass("active");
+        $('#rews').parent().addClass("active");
+        resizeCrossTable();
+        if ($(document).find("ul.size-tabs").length > 0){
+            $(".size-tabs .size-tab.active").css({
+                "min-height": $(".size-tabs .size-tab.active").find(".content").outerHeight() + $(".size-tabs .size-tab.active .top-level").outerHeight() + 10
+            });
+        }
+        if ($(window).width() > 480) strangeTabs();
+        
+        window.scrollTo(0, $('.mid-single').offset().top -20);
         return false;
     });
 
@@ -692,8 +856,73 @@ $(window).load(function(){
         return false;
     });
 
-    $(".popup-window .close").live("click", function(){
-        $(".popup-window").hide();
+/*-ϲ뱻󺡮뮮 흇���ᣨ콭易𐯤򣦲믩-*/
+    $(".fancy-login").click(function() {
+        $(".auth-popup").show();
+        $('#registr .auth-title').css('color', '#999');
+        $('#registr .button-reg').css('background-color', '#999');
+        $('#login .auth-title').css('color', '#669ACC');
+        $('#login .button-login').css('background-color', '#669ACC');
+        $('body').append('<div id="mask"></div>')
+        return false;
+    });
+    $(".fancy-reg").click(function() {
+        $('#login .auth-title').css('color', '#999');
+        $('#login .button-login').css('background-color', '#999');
+        $('#registr .auth-title').css('color', '#99CC00');
+        $('#registr .button-reg').css('background-color', '#99CC00');
+        $(".auth-popup").show();
+        $('body').append('<div id="mask"></div>')
+        return false;
+    });
+    
+    /*-Ю岢泪ힺ���񦡴﫳򣫪/
+    $("#registr input").focus(function() {
+        $('#login .auth-title').css('color', '#999');
+        $('#login .button-login').css('background-color', '#999');
+        $('#registr .auth-title').css('color', '#99CC00');
+        $('#registr .button-reg').css('background-color', '#99CC00');
+        return false;
+    });
+    
+    $("#login input").click(function() {
+        $('#registr .auth-title').css('color', '#999');
+        $('#registr .button-reg').css('background-color', '#999');
+        $('#login .auth-title').css('color', '#669ACC');
+        $('#login .button-login').css('background-color', '#669ACC');
+        return false;
+    });
+
+   /*- $(".fancy-thumb").click(function(){
+        if ($(window).width() > 480) {
+            $($(this).attr("href")).css({
+                "top": $(this).offset().top - $($(this).attr("href")).height(),
+                'margin-left':-$($(this).attr("href")).width()/2
+            });
+            $($(this).attr("href")).show();
+        } else {
+            callPlayer('videoY', 'playVideo');
+        }
+        return false;
+    });-*/
+
+    $(".recipe-products .close").live("click", function(){
+        $(this).parent().hide();
+        $("#mask").remove();
+        return false;
+    });
+    
+    $("#mask").live("click", function(){
+        $(".recipe-products").hide();
+        $(this).remove();
+        return false;
+    });
+    
+     $(".video .close").live("click", function(){
+        $(this).parents(".video").hide();
+        if ($(this).parents(".video").hasClass("video-popup")) {
+            callPlayer('videoY', 'stopVideo');
+        }
         return false;
     });
 
@@ -718,11 +947,19 @@ $(window).load(function(){
         });
     }
 
+    $(".auth-title").live("click", function(){
+        if ($(window).width() <= 480) {
+            $('.auth-title').removeClass("toggled");
+            $(this).toggleClass("toggled");
+        }
+        return false;
+    });
+
     if (document.getElementById("remember")) $("#remember").tiCheckbox({
         margin: "8"
     });
 
-    if ($(document).find(".registration-container").length) $(".registration-container input[type='checkbox'], .registration-container input[type='radio']").tiCheckbox({
+    if ($(document).find(".registration-container").length) $(".registration-container+.registration-container input[type='checkbox'], .registration-container input[type='radio']").tiCheckbox({
         margin: "12"
     });
 
@@ -734,11 +971,15 @@ function rating_init(){
     
     /* рейтинг */
     $(".feedback-form .raiting").hover(function(){
-        if (!$(this).hasClass("disable")) $(this).append("<span></span>");
+        if ($(this).find('span').length == 0) $(this).append("<span></span>");
     }, function(){ /* при уходе с рейтинга, удаляем блок с подсветкой */
     
-        if (!$(this).hasClass("disable")) $(this).find("span").remove();
-        
+        /*-if (!$(this).hasClass("disable")) $(this).find("span").remove();-*/
+        if($(this).find("span").eq(0).attr('data-rating') > 0){
+            $(this).find("span").eq(0).css("width",$(this).find("span").eq(0).attr('data-rating')*15+"px");
+        } else {
+            $(this).find("span").eq(0).css("width","0px");
+        }
     });
 
 
@@ -771,7 +1012,8 @@ function rating_init(){
     });
 
     $(".feedback-form .raiting").click(function(){
-        $(this).addClass('disable').find("span").eq(0).attr('data-rating', rating).css("width",rating*15+"px");
+        /*-$(this).addClass('disable').find("span").eq(0).attr('data-rating', rating).css("width",rating*15+"px");-*/
+        $(this).find("span").eq(0).attr('data-rating', rating).css("width",rating*15+"px");
         return false;
     });
 }
@@ -789,20 +1031,24 @@ function globalResize(){
     if ($(window).width()<=480) {
         vis = 1;
         fCol = 1;
+        tradesScroll = 1;
     } else if ($(window).width()<680){
         fCol = 3;
         vis = 2;
         subCol = 3;
+        tradesScroll = 2;
     } else if ($(window).width()<1024) {
         vis = 3;
-        visF = 2;
+        visF = 1;
         fCol = 3;
         subCol = 4;
+        tradesScroll = 2;
     } else {
         vis = 4;
-        visF = 1;
+        visF = 2;
         fCol = 4;
         subCol = 3;
+        tradesScroll = 2;
     }
 
     if ($(window).width() > 480) {
@@ -811,7 +1057,7 @@ function globalResize(){
         }
     }
 
-    footerMenu(fCol);
+    /*footerMenu(fCol);*/
 
     resizeFooter();
 
@@ -859,19 +1105,19 @@ function globalResize(){
     }
 }
 
-if(isMobile && !isAndroid) {
+/*if(isMobile && !isAndroid) {
 
     $(window).bind( 'orientationchange', function(e){
         globalResize();
     });
 
-} else {
+} else {*/
 
     $(window).resize(function(){
         globalResize();
     });
 
-}
+//}
 
 
 $(window).scroll(function(){

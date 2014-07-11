@@ -1,6 +1,9 @@
 <?php if ($filters) { ?>
 
     <div class="sort-menu">
+    
+     
+     
     <ul class="sorting-groups">
 
 	<?php foreach ($filters as $filter) { ?>
@@ -8,32 +11,33 @@
 		<?php if (isset($filter['filters'])) { ?>
         
             <?php if ($filter['style_id'] == 'list') { ?>
-      <li class="top-level">
+  <li class="top-level">
       <h3><?php echo $filter['name']; ?></h3>
       
-                                        <ul>
-                                         <?php foreach ($filter['filters'] as $filter_value) { ?>
-                                            <?php if ($filter_value['count'] || !$count_enabled) { ?>
-                    							<li><a href="<?php echo $filter_value['href']; ?>" <?php if($filter_value['active']) { ?>class="filter_active"<?php } ?> data-key="<?php echo $filter_value['key']; ?>" data-value="<?php echo $filter_value['value']; ?>"><?php echo $filter_value['name']; ?></a> <?php echo $filter_value['view_count']; ?></li>
-                    						<?php } else { ?>
-                    							<li><?php echo $filter_value['name']; ?> <?php echo $filter_value['view_count']; ?></li>
-                    						<?php } ?>
-                                        <?php } ?>
-                                        </ul>
-                                        
-                                    </li>
+    <ul>
+      <?php foreach ($filter['filters'] as $filter_value) { ?>
+        <?php if ($filter_value['count'] || !$count_enabled) { ?>
+		  <li><a href="<?php echo $filter_value['href']; ?>" <?php if($filter_value['active']) { ?>class="filter_active"<?php } ?> data-key="<?php echo $filter_value['key']; ?>" data-value="<?php echo $filter_value['value']; ?>"><?php echo $filter_value['name']; ?></a> <?php echo $filter_value['view_count']; ?></li>
+		<?php } else { ?>
+		  <li><?php echo $filter_value['name']; ?> <?php echo $filter_value['view_count']; ?></li>
+		<?php } ?>
+        <?php } ?>
+    </ul>
+  </li>
     
     <?php } ?>
 	<?php } ?>
     <?php } ?>
                 
    </ul>  
-   <br/>   
-     <div class="sort-title">
+   
+   <br/>  
+   <div class="sort-title">
          <a id="filter_apply_button" class="button">
-         <?php echo $text_apply; ?></a>
+         Сортировать
+         </a>
          <span class="pointer"></span>
-     </div>
+     </div> 
 </div>         
      
     
@@ -60,12 +64,13 @@
 			filter += index + ':' + val + ';';
 		});
 		filter = filter.substr(0, filter.length - 1);
+		
 		setUrl(filter);
 	});
 	
 	function setUrl(filter) {
 		var href = location.href;
-		if (/\/index\.php\?route=product\/category/.test(href)) {
+		if (true) {
 			var exp = /&filter=(.*?)(&|$)/g;
 			href = href.replace(exp, "$2") + '&filter=' + filter;
 		} else {

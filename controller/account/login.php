@@ -73,15 +73,26 @@ class ControllerAccountLogin extends Controller {
 				unset($this->session->data['shipping_postcode']);
 				unset($this->session->data['payment_country_id']);	
 				unset($this->session->data['payment_zone_id']);	
-			}
-							
+			}	
+                
+           $json = array();
+           $json['success'] = true;
+           $this->response->setOutput(json_encode($json));    
+            return;    
+                			
 			// Added strpos check to pass McAfee PCI compliance test (http://forum.opencart.com/viewtopic.php?f=10&t=12043&p=151494#p151295)
 			if (isset($this->request->post['redirect']) && (strpos($this->request->post['redirect'], $this->config->get('config_url')) !== false || strpos($this->request->post['redirect'], $this->config->get('config_ssl')) !== false)) {
 				$this->redirect(str_replace('&amp;', '&', $this->request->post['redirect']));
 			} else {
 				$this->redirect($this->url->link('account/account', '', 'SSL')); 
 			}
-    	}  
+    	} elseif($this->request->server['REQUEST_METHOD'] == 'POST' && !$this->validate()){
+    	   
+           $json = array();
+           $json['error'] = $this->error['warning'];
+           $this->response->setOutput(json_encode($json));
+           return;
+    	} 
 		
       	$this->data['breadcrumbs'] = array();
 

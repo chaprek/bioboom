@@ -1,11 +1,9 @@
 <?php if (count($languages) > 1) { ?>
-<form  class="lang pull-right" action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
-<div class="lang pull-right">
-
+<form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
+  <div id="language"><?php echo $text_language; ?><br />
     <?php foreach ($languages as $language) { ?>
-        <a href="<?php echo $language['redirect']?>"><?php echo $language['name']; ?></a>
+    <a href="<?php echo $language['redirect']?>"><img src="image/flags/<?php echo $language['image']; ?>" alt="<?php echo $language['name']; ?>" title="<?php echo $language['name']; ?>"/></a>
     <?php } ?>
-
-</div>
+  </div>
 </form>
 <?php } ?>

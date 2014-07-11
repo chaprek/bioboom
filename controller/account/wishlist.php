@@ -113,6 +113,7 @@ class ControllerAccountWishList extends Controller {
 					'model'      => $product_info['model'],
 					'stock'      => $stock,
 					'price'      => $price,		
+                    'quantity'   => $product_info['quantity'],	
 					'special'    => $special,
 					'href'       => $this->url->link('product/product', 'product_id=' . $product_info['product_id']),
 					'remove'     => $this->url->link('account/wishlist', 'remove=' . $product_info['product_id'])

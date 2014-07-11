@@ -14,27 +14,115 @@ class ControllerAccountRegister extends Controller {
 		$this->load->model('account/customer');
 		
     	if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			$this->model_account_customer->addCustomer($this->request->post);
-
+    	   
+            if(isset($this->request->post['mini_registr'])){
+                $this->model_account_customer->addCustomerMini($this->request->post);
+                
+                
+                /*-ADD NEW USER TO SUBSCRIBER LIST-*/
+                    // Ваш ключ доступа к API (из Личного Кабинета)
+                    $api_key = "53eqdpazuik8d5tdc966pnmwhiu9rumei6fd7k4a";
+                    
+                    // Данные о новом подписчике
+                    $user_email = $this->request->post['email'];
+                    $user_name = $this->request->post['firstname'];
+                    $user_name2 = "";
+                    $user_lists = "3473677";
+                    $user_phone = "";
+                    
+                    // Создаём POST-запрос
+                    $POST = array (
+                      'api_key' => $api_key,
+                      'list_ids' => $user_lists,
+                      'fields[email]' => $user_email,
+                      'fields[Firstname]' => $user_name,
+                      'fields[Lastname]' => $user_name2,
+                      'double_optin ' => 1
+                    );
+                    
+                    // Устанавливаем соединение
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $POST);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    curl_setopt($ch, CURLOPT_URL, 
+                                'http://api.unisender.com/ru/api/subscribe?format=json');
+                    $result = curl_exec($ch);
+                    
+                    $newsubs = "";
+                    
+                    if ($result) {
+                      // Раскодируем ответ API-сервера
+                      $jsonObj = json_decode($result);
+                    
+                      if(null===$jsonObj) {
+                        // Ошибка в полученном ответе
+                        $newsubs = "Invalid JSON";
+                    
+                      } elseif(!empty($jsonObj->error)) {
+                        // Ошибка добавления пользователя
+                        $newsubs = "An error occured: " . $jsonObj->error . "(code: " . $jsonObj->code . ")";
+                    
+                      } else {
+                        // Новый пользователь успешно добавлен
+                        //$newsubs = "Added. ID is " . $jsonObj->result->person_id;
+                    
+                      }
+                    } else {
+                      // Ошибка соединения с API-сервером
+                      $newsubs = "API access error";
+                    }
+                
+                
+                
+            } else {
+                $this->model_account_customer->addCustomerMini($this->request->post);
+            }
 			$this->customer->login($this->request->post['email'], $this->request->post['password']);
 			
 			unset($this->session->data['guest']);
 			
 			// Default Shipping Address
-			if ($this->config->get('config_tax_customer') == 'shipping') {
+			if ($this->config->get('config_tax_customer') == 'shipping' && !isset($this->request->post['mini_registr'])) {
 				$this->session->data['shipping_country_id'] = $this->request->post['country_id'];
 				$this->session->data['shipping_zone_id'] = $this->request->post['zone_id'];
 				//$this->session->data['shipping_postcode'] = $this->request->post['postcode'];				
 			}
 			
 			// Default Payment Address
-			if ($this->config->get('config_tax_customer') == 'payment') {
+			if ($this->config->get('config_tax_customer') == 'payment' && !isset($this->request->post['mini_registr'])) {
 				$this->session->data['payment_country_id'] = $this->request->post['country_id'];
 				$this->session->data['payment_zone_id'] = $this->request->post['zone_id'];			
 			}
-							  	  
+			
+            if(isset($this->request->post['mini_registr'])){
+                $json = array();
+                $json['success'] = true;
+                $this->response->setOutput(json_encode($json));    
+                return; 
+	        }
+            
 	  		$this->redirect($this->url->link('account/success'));
-    	}
+            
+    	} elseif($this->request->server['REQUEST_METHOD'] == 'POST' && !$this->validate() && isset($this->request->post['mini_registr'])){
+    	   
+           $json = array();
+           
+           //if(isset($this->error['firstname'])){
+//                $json['error'] = $this->error['firstname'];
+//           } elseif(isset($this->error['email'])) {
+//                $json['error'] = $this->error['email'];
+//           } elseif(isset($this->error['password'])) {
+//                $json['error'] = $this->error['password'];
+//           }
+           $json['errors'] = $this->error;
+           $this->response->setOutput(json_encode($json));
+           return;
+    	} 
+        
+        
+        
     	$this->initGeoIp();
 
       	$this->data['breadcrumbs'] = array();
@@ -349,100 +437,117 @@ class ControllerAccountRegister extends Controller {
   	}
 
   	private function validate() {
+  	 
+     
     	if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
       		$this->error['firstname'] = $this->language->get('error_firstname');
     	}
 
-    	if ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
-      		$this->error['lastname'] = $this->language->get('error_lastname');
-    	}
+        $is_user = $this->model_account_customer->getCustomerByEmail($this->request->post['email']);
+        
+        if($is_user){
+            $this->error['email'] = $this->language->get('error_user_exist');
+        }
 
     	if ((utf8_strlen($this->request->post['email']) > 96) || !$this->ocstore->validate($this->request->post['email'])) {
       		$this->error['email'] = $this->language->get('error_email');
     	}
-
-    	if ($this->model_account_customer->getTotalCustomersByEmail($this->request->post['email'])) {
-      		$this->error['warning'] = $this->language->get('error_exists');
-    	}
-		
-    	if ((utf8_strlen($this->request->post['telephone']) < 3) || (utf8_strlen($this->request->post['telephone']) > 32)) {
-      		$this->error['telephone'] = $this->language->get('error_telephone');
-    	}
-		
-		// Customer Group
-		$this->load->model('account/customer_group');
-		
-		if (isset($this->request->post['customer_group_id']) && is_array($this->config->get('config_customer_group_display')) && in_array($this->request->post['customer_group_id'], $this->config->get('config_customer_group_display'))) {
-			$customer_group_id = $this->request->post['customer_group_id'];
-		} else {
-			$customer_group_id = $this->config->get('config_customer_group_id');
-		}
-
-		$customer_group = $this->model_account_customer_group->getCustomerGroup($customer_group_id);
-			
-		if ($customer_group) {	
-			// Company ID
-			if ($customer_group['company_id_display'] && $customer_group['company_id_required'] && empty($this->request->post['company_id'])) {
-				$this->error['company_id'] = $this->language->get('error_company_id');
-			}
-			
-			// Tax ID 
-			if ($customer_group['tax_id_display'] && $customer_group['tax_id_required'] && empty($this->request->post['tax_id'])) {
-				$this->error['tax_id'] = $this->language->get('error_tax_id');
-			}						
-		}
-		
-    	if ((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {
-      		$this->error['address_1'] = $this->language->get('error_address_1');
-    	}
-
-    	if ((utf8_strlen($this->request->post['city']) < 2) || (utf8_strlen($this->request->post['city']) > 128)) {
-      		$this->error['city'] = $this->language->get('error_city');
-    	}
-
-		$this->load->model('localisation/country');
-		
-		$country_info = $this->model_localisation_country->getCountry($this->request->post['country_id']);
-		
-		//if ($country_info) {
-//			if ($country_info['postcode_required'] && (utf8_strlen($this->request->post['postcode']) < 2) || (utf8_strlen($this->request->post['postcode']) > 10)) {
-//				$this->error['postcode'] = $this->language->get('error_postcode');
-//			}
-//			
-//			// VAT Validation
-//			$this->load->helper('vat');
-//			
-//			if ($this->config->get('config_vat') && $this->request->post['tax_id'] && (vat_validation($country_info['iso_code_2'], $this->request->post['tax_id']) == 'invalid')) {
-//				$this->error['tax_id'] = $this->language->get('error_vat');
-//			}
-//		}
-
-    	if ($this->request->post['country_id'] == '') {
-      		$this->error['country'] = $this->language->get('error_country');
-    	}
-		
-    	if ($this->request->post['zone_id'] == '') {
-      		$this->error['zone'] = $this->language->get('error_zone');
-    	}
-
-    	if ((utf8_strlen($this->request->post['password']) < 4) || (utf8_strlen($this->request->post['password']) > 20)) {
+        
+        
+        if ((utf8_strlen($this->request->post['password']) < 4) || (utf8_strlen($this->request->post['password']) > 20)) {
       		$this->error['password'] = $this->language->get('error_password');
     	}
 
-    	if ($this->request->post['confirm'] != $this->request->post['password']) {
-      		$this->error['confirm'] = $this->language->get('error_confirm');
-    	}
-		
-		if ($this->config->get('config_account_id')) {
-			$this->load->model('catalog/information');
-			
-			$information_info = $this->model_catalog_information->getInformation($this->config->get('config_account_id'));
-			
-			if ($information_info && !isset($this->request->post['agree'])) {
-      			$this->error['warning'] = sprintf($this->language->get('error_agree'), $information_info['title']);
-			}
+    	
+        
+        
+        if(!isset($this->request->post['mini_registr'])){
+        
+            if ($this->request->post['confirm'] != $this->request->post['password']) {
+          		$this->error['confirm'] = $this->language->get('error_confirm');
+        	}
+        
+        	if ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
+          		$this->error['lastname'] = $this->language->get('error_lastname');
+        	}
+    
+        	if ($this->model_account_customer->getTotalCustomersByEmail($this->request->post['email'])) {
+          		$this->error['warning'] = $this->language->get('error_exists');
+        	}
+    		
+        	if ((utf8_strlen($this->request->post['telephone']) < 3) || (utf8_strlen($this->request->post['telephone']) > 32)) {
+          		$this->error['telephone'] = $this->language->get('error_telephone');
+        	}
+    		
+    		// Customer Group
+    		$this->load->model('account/customer_group');
+    		
+    		if (isset($this->request->post['customer_group_id']) && is_array($this->config->get('config_customer_group_display')) && in_array($this->request->post['customer_group_id'], $this->config->get('config_customer_group_display'))) {
+    			$customer_group_id = $this->request->post['customer_group_id'];
+    		} else {
+    			$customer_group_id = $this->config->get('config_customer_group_id');
+    		}
+    
+    		$customer_group = $this->model_account_customer_group->getCustomerGroup($customer_group_id);
+    			
+    		if ($customer_group) {	
+    			// Company ID
+    			if ($customer_group['company_id_display'] && $customer_group['company_id_required'] && empty($this->request->post['company_id'])) {
+    				$this->error['company_id'] = $this->language->get('error_company_id');
+    			}
+    			
+    			// Tax ID 
+    			if ($customer_group['tax_id_display'] && $customer_group['tax_id_required'] && empty($this->request->post['tax_id'])) {
+    				$this->error['tax_id'] = $this->language->get('error_tax_id');
+    			}						
+    		}
+    		
+        	if ((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {
+          		$this->error['address_1'] = $this->language->get('error_address_1');
+        	}
+    
+        	if ((utf8_strlen($this->request->post['city']) < 2) || (utf8_strlen($this->request->post['city']) > 128)) {
+          		$this->error['city'] = $this->language->get('error_city');
+        	}
+    
+    		$this->load->model('localisation/country');
+    		
+    		$country_info = $this->model_localisation_country->getCountry($this->request->post['country_id']);
+    		
+    		//if ($country_info) {
+    //			if ($country_info['postcode_required'] && (utf8_strlen($this->request->post['postcode']) < 2) || (utf8_strlen($this->request->post['postcode']) > 10)) {
+    //				$this->error['postcode'] = $this->language->get('error_postcode');
+    //			}
+    //			
+    //			// VAT Validation
+    //			$this->load->helper('vat');
+    //			
+    //			if ($this->config->get('config_vat') && $this->request->post['tax_id'] && (vat_validation($country_info['iso_code_2'], $this->request->post['tax_id']) == 'invalid')) {
+    //				$this->error['tax_id'] = $this->language->get('error_vat');
+    //			}
+    //		}
+    
+        	if ($this->request->post['country_id'] == '') {
+          		$this->error['country'] = $this->language->get('error_country');
+        	}
+    		
+        	if ($this->request->post['zone_id'] == '') {
+          		$this->error['zone'] = $this->language->get('error_zone');
+        	}
+    
+        	
+    		if ($this->config->get('config_account_id')) {
+    			$this->load->model('catalog/information');
+    			
+    			$information_info = $this->model_catalog_information->getInformation($this->config->get('config_account_id'));
+    			
+    			if ($information_info && !isset($this->request->post['agree'])) {
+          			$this->error['warning'] = sprintf($this->language->get('error_agree'), $information_info['title']);
+    			}
+    		}
+        
 		}
-		
+        
     	if (!$this->error) {
       		return true;
     	} else {

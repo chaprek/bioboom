@@ -1,5 +1,50 @@
 <?php echo $header; ?>
 
+<?
+
+if(isset($order_info) && isset($order_id)){
+
+//print_r($order_info);
+
+foreach($order_info['totals'] as $o_inf){
+    if($o_inf['code'] == "sub_total"){
+        $total = $o_inf['value']; 
+    }
+     if($o_inf['code'] == "shipping"){
+        $shipping = $o_inf['value']; 
+    }
+}
+
+?>
+
+
+<script>
+
+ga('ecommerce:addTransaction', {
+  'id': '<?= $order_id?>',                     // Transaction ID. Required.
+  'revenue': '<?= $total?>',               // Grand Total.
+  'shipping': '<?= $shipping?>'
+});
+
+
+<? foreach($order_info['products'] as $product){?>
+ga('ecommerce:addItem', {
+  'id': <?= $order_id?>,                     // Transaction ID. Required.
+  'name': '<?= $product['name']?>',    // Product name. Required.
+  'sku': '<?= $product['product_id']?>',
+  'price': '<?= $product['price']?>',                 // Unit price.
+  'quantity': '<?= $product['quantity']?>'                   // Quantity.
+});
+<? }?>
+
+ga('ecommerce:send');
+
+</script>
+
+<?
+}
+?>
+
 <div id="main">
     <div class="wrapper" role="main">
         <div class="container">
@@ -13,63 +58,6 @@
                     <aside class="sidemenu">
 <?php echo $column_right; ?>
 
-                        <ul class="catalog-menu service-menu">
-                            <li class="top-level">
-                                <a class="top-level" href="#">МОЙ ПРОФИЛЬ</a>
-                                <ul>
-                                    <li><a href="#">Персональные данные</a></li>
-                                    <li><a href="#">Заказы через интернет</a></li>
-                                    <li><a href="#">Истории посылок</a></li>
-                                    <li><a href="#">Возвраты и невручения</a></li>
-                                    <li><a href="#">Купоны</a></li>
-                                    <li><a href="#">Мои желания</a></li>
-                                    <li><a href="#" class="underlink">Лист ожидания</a> <span class="count">(1)</span></li>
-                                </ul>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">О нас</a>
-                                <ul>
-                                    <li><a href="begining.html">Как все началось</a></li>
-                                    <li><a href="believe.html">Во что мы верим?</a></li>
-                                    <li><a href="#">Почему organic?</a></li>
-                                    <li><a href="#">Знаки сертификации</a></li>
-                                    <li><a href="contacts.html">Контакты</a></li>
-                                    <li><a href="#">Вакансии</a></li>
-                                </ul>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">ЭТИКА</a>
-                                <ul>
-                                    <li><a href="#">Как мы относимся к природе?</a></li>
-                                    <li><a href="#">Как  мы относимся к животным?</a></li>
-                                    <li><a href="#">Цепочка доставки</a></li>
-                                </ul>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">ОБСЛУЖИВАНИЕ КЛИЕНТОВ</a>
-                                <ul>
-                                    <li><a href="#">Обратная связь</a></li>
-                                    <li><a href="#">Оплата и доставка</a></li>
-                                    <li><a href="#">Возврат и обмен</a></li>
-                                    <li><a href="#">Защита персональных данных</a></li>
-                                </ul>
-                            </li>
-                            <li class="top-level active">
-                                <a class="top-level" href="#">РАССЫЛКА</a>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">СТАТЬИ</a>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">РЕЦЕПТЫ</a>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">БОНУСЫ И АКЦИИ</a>
-                            </li>
-                            <li class="top-level">
-                                <a class="top-level" href="#">ЧАСТЫЕ ВПОРОСЫ</a>
-                            </li>
-                        </ul>
                     </aside>
                     <div class="big-side">
                         <h1 class="personal-title"><?php echo $heading_title; ?></h1>

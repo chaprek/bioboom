@@ -9,8 +9,10 @@ class ControllerCheckoutCart extends Controller {
 			$this->session->data['vouchers'] = array();
 		}
 		
+       
+                
 		// Update
-		if (!empty($this->request->post['quantity'])) {
+		if (!empty($this->request->post['quantity']) && empty($this->request->post['min_cart'])) {
 			foreach ($this->request->post['quantity'] as $key => $value) {
 				$this->cart->update($key, $value);
 			}
@@ -22,6 +24,37 @@ class ControllerCheckoutCart extends Controller {
 			unset($this->session->data['reward']);
 			
 			$this->redirect($this->url->link('checkout/cart'));  			
+		}
+        
+        // Update_MINI_CART
+		if (!empty($this->request->post['quantity']) && !empty($this->request->post['min_cart'])) {
+			
+            foreach ($this->request->post['quantity'] as $key => $value) {
+				$this->cart->update($key, $value);
+			}
+			
+			unset($this->session->data['shipping_method']);
+			unset($this->session->data['shipping_methods']);
+			unset($this->session->data['payment_method']);
+			unset($this->session->data['payment_methods']); 
+			unset($this->session->data['reward']);
+			
+			foreach ($this->cart->getProducts() as $product) {
+			 
+                if (($this->config->get('config_customer_price') && $this->customer->isLogged()) || !$this->config->get('config_customer_price')) {
+					$total = $this->currency->format($this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax')) * $product['quantity']);
+				} else {
+					$total = false;
+				}
+             
+				if ($product['key'] == $this->request->post['key']) {
+					$json = array(
+                        'total' => $total
+                    );
+				}
+			} 
+            $this->response->setOutput(json_encode($json));	
+            return;			
 		}
        	
 		// Remove
@@ -48,7 +81,7 @@ class ControllerCheckoutCart extends Controller {
 			$this->session->data['success'] = $this->language->get('text_coupon');
 			
 			$this->redirect($this->url->link('checkout/cart'));
-		}
+		} 
 		
 		// Voucher
 		if (isset($this->request->post['voucher']) && $this->validateVoucher()) { 
@@ -156,7 +189,11 @@ class ControllerCheckoutCart extends Controller {
 			} else {
 				$this->data['attention'] = '';
 			}
-						
+				
+             if (isset($this->request->get['min_order'])) {
+				$this->data['attention'] = "Недостаточная сумма заказа";
+		    }    
+                		
 			if (isset($this->session->data['success'])) {
 				$this->data['success'] = $this->session->data['success'];
 			
@@ -182,6 +219,7 @@ class ControllerCheckoutCart extends Controller {
             
             $this->data['wishes'] = array();
 	
+    if(isset($this->session->data['wishlist'])){
 		foreach ($this->session->data['wishlist'] as $key => $product_id) {
 		 	$product_info = $this->model_catalog_product->getProduct($product_id);
 			
@@ -227,7 +265,7 @@ class ControllerCheckoutCart extends Controller {
 				unset($this->session->data['wishlist'][$key]);
 			}
 		}	
-        
+        }
         /*-END TAKE WISHLIST-*/
             
             
@@ -429,14 +467,36 @@ class ControllerCheckoutCart extends Controller {
 			}
 			
 			$this->data['totals'] = $total_data;
-						
+			
+            $this->data['sum'] = "";
+            $this->data['deliv'] = "";
+            $this->data['allsum'] = "";
+            $this->data['coupon_sum'] = 0;
+            
+           
+    		foreach($total_data as $key => $value) {
+    			 $sort_order[$key] = $value['sort_order'];
+                
+                 if($value['code'] == "shipping"){
+                        $this->data['deliv'] = $value['text'];
+                 } elseif($value['code'] == "total") {
+                        $this->data['allsum'] = $value['text'];
+                 } elseif($value['code'] == "sub_total") {
+                        $this->data['sum'] = $value['text'];
+                 } elseif($value['code'] == "coupon") {
+                        $this->data['coupon_sum'] = $value['text'];
+                 }
+    		}
+            			
 			$this->data['continue'] = $this->url->link('common/home');
 				
                 
             if($this->customer->isLogged()){    		
 			     $this->data['checkout'] = $this->url->link('checkout/checkout', '', 'SSL');
+			     $this->data['isLogged'] = true;
             } else {
                  $this->data['checkout'] = $this->url->link('account/login', 'cart=1');
+                 $this->data['isLogged'] = false;
             }
             
 			if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/checkout/cart.tpl')) {
@@ -589,8 +649,14 @@ class ControllerCheckoutCart extends Controller {
 														
 			if (isset($this->request->post['option'])) {
 				$option = array_filter($this->request->post['option']);
+                if(isset($this->request->post['price_opt']) && $this->request->post['price_opt'] != 0){
+                    $price_opt = $this->request->post['price_opt'];
+                } else {
+                    $price_opt = false;
+                }
 			} else {
 				$option = array();	
+                $price_opt = false;
 			}
 			
 			$product_options = $this->model_catalog_product->getProductOptions($this->request->post['product_id']);
@@ -602,7 +668,7 @@ class ControllerCheckoutCart extends Controller {
 			}
 			
 			if (!$json) {
-				$this->cart->add($this->request->post['product_id'], $quantity, $option);
+				$this->cart->add($this->request->post['product_id'], $quantity, $option, $price_opt);
 
 				$json['success'] = sprintf($this->language->get('text_success'), $this->url->link('product/product', 'product_id=' . $this->request->post['product_id']), $product_info['name'], $this->url->link('checkout/cart'));
 				

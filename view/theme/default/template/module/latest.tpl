@@ -1,28 +1,33 @@
-<div class="box">
-  <div class="box-heading"><?php echo $heading_title; ?></div>
-  <div class="box-content">
-    <div class="box-product">
-      <?php foreach ($products as $product) { ?>
-      <div>
-        <?php if ($product['thumb']) { ?>
-        <div class="image"><a href="<?php echo $product['href']; ?>"><img src="<?php echo $product['thumb']; ?>" alt="<?php echo $product['name']; ?>" /></a></div>
-        <?php } ?>
-        <div class="name"><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></div>
-        <?php if ($product['price']) { ?>
-        <div class="price">
-          <?php if (!$product['special']) { ?>
-          <?php echo $product['price']; ?>
-          <?php } else { ?>
-          <span class="price-old"><?php echo $product['price']; ?></span> <span class="price-new"><?php echo $product['special']; ?></span>
-          <?php } ?>
-        </div>
-        <?php } ?>
-        <?php if ($product['rating']) { ?>
-        <div class="rating"><img src="catalog/view/theme/default/image/stars-<?php echo $product['rating']; ?>.png" alt="<?php echo $product['reviews']; ?>" /></div>
-        <?php } ?>
-        <div class="cart"><input type="button" value="<?php echo $button_cart; ?>" onclick="addToCart('<?php echo $product['product_id']; ?>');" class="button" /></div>
-      </div>
-      <?php } ?>
-    </div>
-  </div>
-</div>
+    <section class="catalog catalog-slider index-promo" id="popular-slider">
+                        <h2><?php echo $heading_title; ?></h2>
+                        <div class="trades">
+                        <?php foreach ($products as $product) { ?>
+                        
+                            <div class="item">
+                             <?php if ($product['thumb']) { ?>
+                                <div class="thumb div-link" data-href="<?php echo "/".str_replace( HTTP_SERVER,"",$product['href']); ?>">
+                                    <div>
+                                    <img src="<?php echo $product['thumb']; ?>" alt="">
+                                    </div>
+                                </div>
+                             <?php } ?>
+                             <? if($product['rating'] > 0){?>
+                                  <div class="clearfix mb10">
+                                        <div class="raiting">
+                                            <div style="width: <?= $product['rating']*20?>%"></div>
+                                        </div>
+                                        <span class="raiting-count rews_top">Отзывов: <?php echo $product['reviews']; ?></span>
+                                  </div>
+                             <? }?>
+                                <span><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></span>
+                                <?php if ($product['price']) { ?>
+                                <div class="price"><?php echo $product['price']; ?></div>
+                                <?php } ?>
+                                
+                                <a class="add-to-cart"  onclick="addToCart('<?php echo $product['product_id']; ?>'); ga('send', 'event', 'Buy', 'New', '<?= $product['name']; ?>');" title="<?php echo $button_cart; ?>"></a>
+                            </div>
+                       <?php } ?>
+                        </div>
+                        <span class="control prev" title=""></span>
+                        <span class="control next" title=""></span>
+                    </section>

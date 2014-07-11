@@ -24,7 +24,7 @@ class ModelCatalogReview extends Model {
     
    	public function getAllReviews() {
 	
-		$query = $this->db->query("SELECT r.review_id, r.author, r.rating, r.text, r.parent_id, r.useful, r.nouseful, r.date_added FROM " . DB_PREFIX . "review r  WHERE r.parent_id = '0' AND r.status = '1' ORDER BY r.date_added DESC LIMIT 0, 10");
+		$query = $this->db->query("SELECT r.review_id, r.author, r.product_id, r.rating, r.text, r.parent_id, r.useful, r.nouseful, r.date_added FROM " . DB_PREFIX . "review r  WHERE r.parent_id = '0' AND r.status = '1' ORDER BY r.date_added DESC LIMIT 0, 10");
 			
 		return $query->rows;
 	}

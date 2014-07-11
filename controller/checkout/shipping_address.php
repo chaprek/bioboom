@@ -32,7 +32,7 @@ class ControllerCheckoutShippingAddress extends Controller {
 		if (isset($this->session->data['shipping_address_id'])) {
 			$this->data['address_id'] = $this->session->data['shipping_address_id'];
 		} else {
-			$this->data['address_id'] = $this->customer->getAddressId();
+			$this->data['address_id']= $this->session->data['shipping_address_id'] = $this->customer->getAddressId();
 		}
 
 		$this->load->model('account/address');

@@ -5,7 +5,7 @@ class ControllerAccountWaitList extends Controller {
 	  		$this->redirect($this->url->link('account/login', '', 'SSL')); 
     	}    	
 		
-		$this->language->load('account/wishlist');
+		$this->language->load('account/waitlist');
         
 		$this->load->model('account/waitlist');
 		
@@ -120,7 +120,8 @@ class ControllerAccountWaitList extends Controller {
 					'name'       => $product_info['name'],
 					'model'      => $product_info['model'],
 					'stock'      => $stock,
-					'price'      => $price,		
+					'price'      => $price,	
+                    'quantity'   => $product_info['quantity'],	
 					'special'    => $special,
 					'href'       => $this->url->link('product/product', 'product_id=' . $product_info['product_id']),
 					'remove'     => $this->url->link('account/waitlist', 'remove=' . $product_info['product_id'])
@@ -201,15 +202,20 @@ class ControllerAccountWaitList extends Controller {
 		
 		$json = array();
 
-	//	if (!isset($this->session->data['wishlist'])) {
-//			$this->session->data['wishlist'] = array();
-//		}
-				
-	//	if (isset($this->request->post['product_id'])) {
-//			$product_id = $this->request->post['product_id'];
-//		} else {
-//			$product_id = 0;
-//		}
+        $json['error'] = false;
+        $json['name'] = '';
+        $json['email'] = '';
+
+        if ((utf8_strlen($this->request->post['name']) < 1) || (utf8_strlen($this->request->post['name']) > 32)) {
+			$json['name'] = 'Неверное имя';
+            $json['error'] = true;
+		}
+
+		if ((utf8_strlen($this->request->post['email']) > 96) || !$this->ocstore->validate($this->request->post['email'])) {
+			$json['email'] = 'Неверный email';
+            $json['error'] = true;
+		}
+
         
         $this->load->model('catalog/product');
 		$this->load->model('account/waitlist');
@@ -218,11 +224,11 @@ class ControllerAccountWaitList extends Controller {
                
 		$product_info = $this->model_catalog_product->getProduct($this->request->post['product_id']);
 		
-		if ($product_info) {
+		if ($product_info && !$json['error']) {
 					 		
 				$json['success'] = sprintf($this->language->get('text_success'), $this->url->link('product/product', 'product_id=' . $this->request->post['product_id']), $product_info['name'], $this->url->link('account/wishlist'));				
 		
-		}	
+		} 	
 		
 		$this->response->setOutput(json_encode($json));
 	}

@@ -1,8 +1,6 @@
 <?php
 class ControllerCommonSeoPro extends Controller {
 	private $cache_data = null;
-	private $languages = array();
-	private $config_language;
 
 	public function __construct($registry) {
 		parent::__construct($registry);
@@ -16,53 +14,9 @@ class ControllerCommonSeoPro extends Controller {
 			}
 			$this->cache->set('seo_pro', $this->cache_data);
 		}
-
-		$query = $this->db->query("SELECT `value` FROM `" . DB_PREFIX . "setting` WHERE `key` = 'config_language'");
-		$this->config_language = $query->row['value'];
-
-		$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "language WHERE status = '1'");
-
-		foreach ($query->rows as $result) {
-			$this->languages[$result['code']] = $result;
-		}
-
 	}
 
 	public function index() {
-
-// language
-		$code = $this->config_language;
-
-		if(isset($this->request->get['_route_'])) {
-			$tokens = explode('/', $this->request->get['_route_']);
-
-			if(array_key_exists($tokens[0], $this->languages)) {
-				$code = $tokens[0];
-				$this->request->get['_route_'] = substr($this->request->get['_route_'], strlen($code) + 1);
-			}
-
-			if(trim($this->request->get['_route_']) == '' || trim($this->request->get['_route_']) == 'index.php') {
-				unset($this->request->get['_route_']);
-			}
-		}
-
-
-		if(!isset($this->session->data['language']) || $this->session->data['language'] != $code) {
-			$this->session->data['language'] = $code;
-		}
-
-		if(!isset($this->request->cookie['language']) || $this->request->cookie['language'] != $code) {
-			setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/', $this->request->server['HTTP_HOST']);
-		}
-
-		$this->config->set('config_language_id', $this->languages[$code]['language_id']);
-		$this->config->set('config_language', $this->languages[$code]['code']);
-
-		$language = new Language($this->languages[$code]['directory']);
-		$language->load($this->languages[$code]['filename']);
-		$this->registry->set('language', $language);
-
-
 		// Add rewrite to url class
 		if ($this->config->get('config_seo_url')) {
 			$this->url->addRewrite($this);
@@ -77,6 +31,14 @@ class ControllerCommonSeoPro extends Controller {
 			$route = $this->request->get['_route_'];
 			unset($this->request->get['_route_']);
 			$parts = explode('/', trim(utf8_strtolower($route), '/'));
+			/* BEGIN News & Reviews */
+			if (preg_match('#^(news/)(.*)#', $route, $matches)) {
+				$parts = explode('/', trim(utf8_strtolower($matches[2]), '/'));
+				if($parts[0] == '' AND count($parts) == 1) {
+					$parts = explode('/', trim(utf8_strtolower($route), '/'));
+				}
+			}
+			/* END News & Reviews */
 			list($last_part) = explode('.', array_pop($parts));
 			array_push($parts, $last_part);
 
@@ -107,10 +69,14 @@ class ControllerCommonSeoPro extends Controller {
 						$this->request->get[$url[0]] = $url[1];
 					}
 				}
+			/* BEGIN News & Reviews */
+			} elseif ( (isset($keyword_in[0]) AND $keyword_in[0] == 'news') OR (isset($parts[0]) AND $parts[0] == 'news') ) {
+				$this->request->get['route'] = 'information/news';
+			/* END News & Reviews */
 			} else {
 				$this->request->get['route'] = 'error/not_found';
 			}
-
+								
 			if (isset($this->request->get['product_id'])) {
 				$this->request->get['route'] = 'product/product';
 				if (!isset($this->request->get['path'])) {
@@ -120,9 +86,14 @@ class ControllerCommonSeoPro extends Controller {
 			} elseif (isset($this->request->get['path'])) {
 				$this->request->get['route'] = 'product/category';
 			} elseif (isset($this->request->get['manufacturer_id'])) {
-				$this->request->get['route'] = 'product/manufacturer/product';
+				$this->request->get['route'] = 'product/manufacturer/info';
 			} elseif (isset($this->request->get['information_id'])) {
 				$this->request->get['route'] = 'information/information';
+			/* BEGIN News & Reviews */
+			} elseif (isset($this->request->get['news_id'])) {
+				$this->request->get['route'] = 'information/news';
+			/* END News & Reviews */
+			
 			} else {
 				if (isset($queries[$parts[0]])) {
 					$this->request->get['route'] = $queries[$parts[0]];
@@ -138,10 +109,7 @@ class ControllerCommonSeoPro extends Controller {
 		}
 	}
 
-	public function rewrite($link, $code = '') {
-		if(!$code) {
-			$code = $this->session->data['language'];
-		}
+	public function rewrite($link) {
 		if (!$this->config->get('config_seo_url')) return $link;
 
 		$seo_url = '';
@@ -155,6 +123,13 @@ class ControllerCommonSeoPro extends Controller {
 		unset($data['route']);
 
 		switch ($route) {
+			/* BEGIN News & Reviews */
+			case 'information/news':
+				if (!isset($data['news_id'])) {
+					$seo_url .= '/news';
+				}
+				break;
+			/* END News & Reviews */
 			case 'product/product':
 				if (isset($data['product_id'])) {
 					$tmp = $data;
@@ -194,11 +169,7 @@ class ControllerCommonSeoPro extends Controller {
 			$link = $this->config->get('config_url');
 		}
 
-		if ($code != $this->config_language){
-			$link .= $code . '/index.php?route=' . $route;
-		} else{
-			$link .= 'index.php?route=' . $route;
-		}
+		$link .= 'index.php?route=' . $route;
 
 		if (count($data)) {
 			$link .= '&amp;' . urldecode(http_build_query($data, '', '&amp;'));
@@ -207,13 +178,23 @@ class ControllerCommonSeoPro extends Controller {
 		$queries = array();
 		foreach ($data as $key => $value) {
 			switch ($key) {
+				/* BEGIN News & Reviews */
+				case 'news_id':
+					$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE `query` = '" . $this->db->escape($key . '=' . (int)$value) . "'");
+					if ($query->num_rows) {
+						$seo_url .= '/news/' . rawurlencode($query->row['keyword']);
+						unset($data[$key]);
+						$postfix = 1;
+					}
+					break;
+				/* END News & Reviews */
 				case 'product_id':
-				case 'manufacturer_id':
 				case 'category_id':
 				case 'information_id':
+					$postfix = 1;
+				case 'manufacturer_id':
 					$queries[] = $key . '=' . $value;
 					unset($data[$key]);
-					$postfix = 1;
 					break;
 
 				case 'path':
@@ -231,6 +212,7 @@ class ControllerCommonSeoPro extends Controller {
 
 		if(empty($queries)) {
 			$queries[] = $route;
+			if ($route != 'common/home') {$postfix = 1;} // Fix postfix for Home
 		}
 
 		$rows = array();
@@ -252,11 +234,7 @@ class ControllerCommonSeoPro extends Controller {
 
 		if ($seo_url == '') return $link;
 
-		if($code != $this->config_language) {
-			$seo_url = $code . '/' . trim($seo_url, '/');
-		} else {
-			$seo_url = trim($seo_url, '/');
-		}
+		$seo_url = trim($seo_url, '/');
 
 		if ($component['scheme'] == 'https') {
 			$seo_url = $this->config->get('config_ssl') . $seo_url;
@@ -273,7 +251,10 @@ class ControllerCommonSeoPro extends Controller {
 		if(substr($seo_url, -2) == '//') {
 			$seo_url = substr($seo_url, 0, -1);
 		}
-
+		if(isset( $data['page'])){
+		$seo_url .=$data['page']."/";
+		unset($data['page']);
+		}
 		if (count($data)) {
 			$seo_url .= '?' . urldecode(http_build_query($data, '', '&amp;'));
 		}
@@ -336,11 +317,8 @@ class ControllerCommonSeoPro extends Controller {
 	}
 
 	private function validate() {
-		if (isset($this->request->get['route']) && $this->request->get['route'] == 'error/not_found') {
+		if (empty($this->request->get['route']) || $this->request->get['route'] == 'error/not_found') {
 			return;
-		}
-		if(empty($this->request->get['route'])) {
-			$this->request->get['route'] = 'common/home';
 		}
 
 		if (isset($this->request->server['HTTP_X_REQUESTED_WITH']) && strtolower($this->request->server['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
@@ -348,12 +326,10 @@ class ControllerCommonSeoPro extends Controller {
 		}
 
 		if (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) {
-			$config_ssl = substr($this->config->get('config_ssl'), 0, $this->strpos_offset('/', $this->config->get('config_ssl'), 3) + 1);
-			$url = str_replace('&amp;', '&', $config_ssl . ltrim($this->request->server['REQUEST_URI'], '/'));
+			$url = str_replace('&amp;', '&', $this->config->get('config_ssl') . ltrim($this->request->server['REQUEST_URI'], '/'));
 			$seo = str_replace('&amp;', '&', $this->url->link($this->request->get['route'], $this->getQueryString(array('route')), 'SSL'));
 		} else {
-			$config_url = substr($this->config->get('config_url'), 0, $this->strpos_offset('/', $this->config->get('config_url'), 3) + 1);
-			$url = str_replace('&amp;', '&', $config_url . ltrim($this->request->server['REQUEST_URI'], '/'));
+			$url = str_replace('&amp;', '&', $this->config->get('config_url') . ltrim($this->request->server['REQUEST_URI'], '/'));
 			$seo = str_replace('&amp;', '&', $this->url->link($this->request->get['route'], $this->getQueryString(array('route')), 'NONSSL'));
 		}
 
@@ -361,20 +337,6 @@ class ControllerCommonSeoPro extends Controller {
 			header($this->request->server['SERVER_PROTOCOL'] . ' 301 Moved Permanently');
 
 			$this->response->redirect($seo);
-		}
-	}
-
-	private function strpos_offset($needle, $haystack, $occurrence) {
-		// explode the haystack
-		$arr = explode($needle, $haystack);
-		// check the needle is not out of bounds
-		switch($occurrence) {
-			case $occurrence == 0:
-				return false;
-			case $occurrence > max(array_keys($arr)):
-				return false;
-			default:
-				return strlen(implode($needle, array_slice($arr, 0, $occurrence)));
 		}
 	}
 

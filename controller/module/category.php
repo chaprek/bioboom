@@ -30,9 +30,15 @@ class ControllerModuleCategory extends Controller {
 
 		$this->data['categories'] = array();
         
-        $cats_id = (!isset($parts[1]))?0:$parts[0];
+        $cats_id = (!isset($parts[1]))?$parts[0]:$parts[1];
 
 		$categories = $this->model_catalog_category->getCategories($cats_id);
+
+if(count($categories) > 0){
+} else {
+    $cats_id = $parts[0];
+    $categories = $this->model_catalog_category->getCategories($cats_id);
+}
 
 		foreach ($categories as $category) {
 			$total = $this->model_catalog_product->getTotalProducts(array('filter_category_id'  => $category['category_id']));
@@ -54,7 +60,7 @@ class ControllerModuleCategory extends Controller {
 				$children_data[] = array(
 					'category_id' => $child['category_id'],
 					'name'        => $child['name'] ,
-					'href'        => $this->url->link('product/category', 'path=' . $category['category_id'] . '_' . $child['category_id'])	
+					'href'        => "/".str_replace(HTTP_SERVER,"",$this->url->link('product/category', 'path=' . $category['category_id'] . '_' . $child['category_id']))	
 				);		
 			}
 
@@ -62,7 +68,7 @@ class ControllerModuleCategory extends Controller {
 				'category_id' => $category['category_id'],
 				'name'        => $category['name'] . ($this->config->get('config_product_count') ? ' (' . $total . ')' : ''),
 				'children'    => $children_data,
-				'href'        => $this->url->link('product/category', 'path='.((!$cats_id)?"":$cats_id."_") . $category['category_id'])
+				'href'        => "/".str_replace(HTTP_SERVER,"",$this->url->link('product/category', 'path='.((!$cats_id)?"":$cats_id."_") . $category['category_id']))
 			);	
 		}
 		

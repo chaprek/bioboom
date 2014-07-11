@@ -30,28 +30,28 @@
                                  </div>
                                  <div class="data-list">
                                      <div class="row">
-                                         <div class="col-title">Имя и фамилия</div>
+                                         <div class="col-title"><?php echo $client_firstname; ?> </div>
                                          <div class="col-content"><?php echo $firstname; ?> <?php echo $lastname; ?></div>
                                      </div>
                                      <div class="row">
-                                         <div class="col-title">пол</div>
-                                         <div class="col-content">женский</div>
+                                         <div class="col-title"><?php echo $entry_sex; ?></div>
+                                         <div class="col-content"><?php echo ($sex == 1)?"мужской":($sex == 2)?"женский":""; ?></div>
                                      </div>
                                      <div class="row">
                                          <div class="col-title"><?php echo $entry_address_1; ?></div>
                                          <div class="col-content"><?php echo $address_1; ?></div>
                                      </div>
                                      <div class="row">
-                                         <div class="col-title">Индекс, населенный пункт</div>
+                                         <div class="col-title"><?php echo $entry_city; ?></div>
                                          <div class="col-content"><?php echo $postcode; ?> <?php echo $city; ?></div>
                                      </div>
                                      <div class="row">
-                                         <div class="col-title">Номер телефона</div>
+                                         <div class="col-title"><?php echo $client_telephone; ?></div>
                                          <div class="col-content"><?php echo $telephone; ?></div>
                                      </div>
                                      <div class="row">
-                                         <div class="col-title">Дата рождения</div>
-                                         <div class="col-content">160485</div>
+                                         <div class="col-title"><?php echo $client_birth; ?></div>
+                                         <div class="col-content"><?php echo $birth; ?></div>
                                      </div>
                                      <div class="row">
                                          <div class="col-title"><?php echo $entry_email; ?></div>
@@ -60,7 +60,14 @@
                                      <div class="row controls-row">
                                          <div class="col-title"><a href="#" class="btn-submit-mid">Изменить данные</a></div>
                                      </div>
-                                     <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
+                                     <script>
+                                     $('.btn-submit-mid').live('click', function(){
+                                        $('.change_profile').slideToggle();
+                                        return false;
+                                     });
+                                     
+                                     </script>
+                                     <form action="<?php echo $action; ?>" class="change_profile" method="post" enctype="multipart/form-data">
                                      <input type="hidden" name="zone_id" value="<?php echo $zone_id; ?>"/>
                                      <input type="hidden" name="country_id" value="<?php echo $country_id; ?>"/>
                                          <div class="row clearfix">
@@ -70,16 +77,21 @@
                                             <span class="error"><?php echo $error_firstname; ?></span>
                                             <?php } ?>
                                          </div>
-                                         <div class="row clearfix">
+                                         <!--<div class="row clearfix">
                                              <div class="col-title"><?php echo $entry_lastname; ?></div>
                                              <div class="col-content clearfix"><input type="text" name="lastname" value="<?php echo $lastname; ?>"/></div>
                                              <?php if ($error_lastname) { ?>
                                             <span class="error"><?php echo $error_lastname; ?></span>
                                             <?php } ?>
-                                         </div>
+                                         </div>-->
                                          <div class="row clearfix">
-                                             <div class="col-title">пол</div>
-                                             <div class="col-content clearfix"><input type="text" value="женский"></div>
+                                             <div class="col-title"><?php echo $entry_sex; ?></div>
+                                             <div class="col-content clearfix item">
+                                                 <div class="radio-group registration-container">
+                                                    <p><input type="radio" name="sex" value="1" <?= ($sex == 1)?"checked=checked":"" ?> /><label>Мужской</label></p>
+                                                    <p><input type="radio" name="sex" value="2" <?= ($sex == 2)?"checked=checked":"" ?> /><label>Женский</label></p>
+                                                 </div>
+                                             </div>
                                          </div>
                                          <div class="row clearfix">
                                              <div class="col-title"><?php echo $entry_address_1; ?></div>
@@ -97,13 +109,13 @@
                                                 <span class="error"><?php echo $error_city; ?></span>
                                                 <?php } ?>
                                          </div>
-                                         <div class="row clearfix">
+                                        <!-- <div class="row clearfix">
                                              <div class="col-title"><?php echo $entry_postcode; ?></div>
                                              <div class="col-content clearfix"><input type="text" name="postcode" value="<?php echo $postcode; ?>"></div>
                                             <?php if ($error_postcode) { ?>
                                             <span class="error"><?php echo $error_postcode; ?></span>
                                             <?php } ?>                                         
-                                         </div>
+                                         </div>-->
                                          <div class="row clearfix">
                                              <div class="col-title"><?php echo $entry_telephone; ?></div>
                                              <div class="col-content clearfix"><input type="text" name="telephone" value="<?php echo $telephone; ?>" /></div>
@@ -112,8 +124,8 @@
                                             <?php } ?>
                                          </div>
                                          <div class="row clearfix">
-                                             <div class="col-title">Дата рождения</div>
-                                             <div class="col-content clearfix"><input type="text" value="160485"></div>
+                                             <div class="col-title"><?php echo $client_birth; ?></div>
+                                             <div class="col-content clearfix"><input type="text" name="birth" value="<?php echo $birth; ?>"></div>
                                          </div>
                                          <div class="row clearfix">
                                              <div class="col-title"><?php echo $entry_email; ?></div>
@@ -138,26 +150,26 @@
                                                  </p>-->
                                                  <p>
                                                      <label><?php echo $entry_password; ?></label>
-                                                     <input type="password" name="password" value="<?php echo $password; ?>" />
+                                                     <input type="password" name="password" value="" />
                                                      <?php if ($error_password) { ?>
                                                     <span class="error"><?php echo $error_password; ?></span>
                                                     <?php } ?>
                                                  </p>
                                                  <p>
                                                      <label><?php echo $entry_confirm; ?></label>
-                                                     <input type="password" name="confirm" value="<?php echo $confirm; ?>" />
+                                                     <input type="password" name="confirm" value="" />
                                                      <?php if ($error_confirm) { ?>
                                                     <span class="error"><?php echo $error_confirm; ?></span>
                                                     <?php } ?>
                                                  </p>
-                                                 <div class="notice">*Только символы ... такие и такие</div>
+                                                 <!--<div class="notice">*Только символы ... такие и такие</div>-->
                                              </div>
                                          </div>
                                          <div class="row clearfix controls-row">
                                              <div class="col-content clearfix">
                                              <input type="submit" class="btn-submit-green" value="<?php echo $button_save; ?>" class="button" />
                                                 <!-- <a href="#" class="btn-submit-green">Сохранить</a>-->
-                                                 <a href="#" class="rendo">Отмена</a>
+                                                 <input type="reset" value="Отмена" class="rendo" />
                                              </div>
                                          </div>
                                      </form>    

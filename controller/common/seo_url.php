@@ -1,5 +1,22 @@
 <?php
 class ControllerCommonSeoUrl extends Controller {
+	private $cache_data = null;
+
+	public function __construct($registry) {
+		parent::__construct($registry);
+		$this->cache_data = $this->cache->get('seo_url');
+		if (!$this->cache_data) {
+			$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias");
+
+			$this->cache_data = array();
+			foreach ($query->rows as $row) {
+				$this->cache_data['keywords'][$row['keyword']] = $row['query'];
+				$this->cache_data['queries'][$row['query']] = $row['keyword'];
+			}
+			$this->cache->set('seo_url', $this->cache_data);
+		}
+	}
+
 	public function index() {
 		// Add rewrite to url class
 		if ($this->config->get('config_seo_url')) {
@@ -9,13 +26,12 @@ class ControllerCommonSeoUrl extends Controller {
 		// Decode URL
 		if (isset($this->request->get['_route_'])) {
 			$parts = explode('/', $this->request->get['_route_']);
-			
+
 			foreach ($parts as $part) {
-				$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE keyword = '" . $this->db->escape($part) . "'");
-				
-				if ($query->num_rows) {
-					$url = explode('=', $query->row['query']);
-					
+				if (isset($this->cache_data['keywords'][$part])) {
+					$query = $this->cache_data['keywords'][$part];
+					$url = explode('=', $query);
+
 					if ($url[0] == 'product_id') {
 						$this->request->get['product_id'] = $url[1];
 					}
@@ -45,7 +61,7 @@ class ControllerCommonSeoUrl extends Controller {
 			} elseif (isset($this->request->get['path'])) {
 				$this->request->get['route'] = 'product/category';
 			} elseif (isset($this->request->get['manufacturer_id'])) {
-				$this->request->get['route'] = 'product/manufacturer/info';
+				$this->request->get['route'] = 'product/manufacturer/product';
 			} elseif (isset($this->request->get['information_id'])) {
 				$this->request->get['route'] = 'information/information';
 			}
@@ -68,23 +84,21 @@ class ControllerCommonSeoUrl extends Controller {
 			
 			foreach ($data as $key => $value) {
 				if (isset($data['route'])) {
-					if (($data['route'] == 'product/product' && $key == 'product_id') || (($data['route'] == 'product/manufacturer/info' || $data['route'] == 'product/product') && $key == 'manufacturer_id') || ($data['route'] == 'information/information' && $key == 'information_id')) {
-						$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE `query` = '" . $this->db->escape($key . '=' . (int)$value) . "'");
-					
-						if ($query->num_rows) {
-							$url .= '/' . $query->row['keyword'];
-							
+					if (($data['route'] == 'product/product' && $key == 'product_id') || (($data['route'] == 'product/manufacturer/product' || $data['route'] == 'product/product') && $key == 'manufacturer_id') || ($data['route'] == 'information/information' && $key == 'information_id')) {
+
+						if (isset($this->cache_data['queries'][$key . '=' . (int)$value])) {
+							$keyword = $this->cache_data['queries'][$key . '=' . (int)$value];
+							$url .= '/' . $keyword;
 							unset($data[$key]);
-						}					
+						}
 					} elseif ($key == 'path') {
 						$categories = explode('_', $value);
 						
 						foreach ($categories as $category) {
-							$query = $this->db->query("SELECT * FROM " . DB_PREFIX . "url_alias WHERE `query` = 'category_id=" . (int)$category . "'");
-					
-							if ($query->num_rows) {
-								$url .= '/' . $query->row['keyword'];
-							}							
+							if (isset($this->cache_data['queries']['category_id=' . (int)$category])) {
+								$keyword = $this->cache_data['queries']['category_id=' . (int)$category];
+								$url .= '/' . $keyword;
+							}
 						}
 						
 						unset($data[$key]);

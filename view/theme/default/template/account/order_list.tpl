@@ -33,7 +33,7 @@
                                             <th class="numb">Номер</th>
                                             <th>Название</th>
                                             <th>Кол-во</th>
-                                            <th>Размер</th>
+                                            <!--<th>Размер</th>-->
                                             <th>Стоимость</th>
                                             <th>Оплата</th>
                                             <th>Статус</th>
@@ -50,41 +50,41 @@
                                             <td class="numb"> #<?php echo $order['order_id']; ?></td>
                                             <td>&nbsp;</td>
                                             <td><?php echo $order['product']; ?></td>
-                                            <td>&nbsp;</td>
+                                           <!-- <td>&nbsp;</td>-->
                                             <td><?php echo $order['total']; ?></td>
-                                            <td>Б/н</td>
+                                            <td><?php echo $order['payment']; ?></td>
                                             <td><?php echo $order['status']; ?></td>
-                                            <td>Новая почта</td>
+                                            <td><?php echo $order['shipping']; ?></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="10">
+                                            <td colspan="9">
                                                 <table class="table-collapsed">
                                                 <? $f=0?>
                                                 <?php foreach ($order['products'] as $product) { ?>
                                                     <tr>
-                                                        <td class="numb">922 640138</td>
+                                                        <td class="numb"></td>
                                                         <td class="name"><?php echo $product['name']; ?></td>
                                                         <td><?php echo $product['quantity']; ?></td>
-                                                        <td>36/38</td>
+                                                       <!-- <td>36/38</td>-->
                                                         <td><?php echo $product['total']; ?></td>
                                                         <? if($f==0){?>
-                                                        <td rowspan="2" class="dark paytype">Безналичный расчет карта приват банк</td>
+                                                        <td rowspan="2" class="dark paytype"></td>
                                                         <? }?>
-                                                        <td><a href="#" class="dark status">Отправлено</a></td>
-                                                        <td class="dark">Новая почта</td>
+                                                        <td><a href="#" class="dark status"></a></td>
+                                                        <td class="dark"></td>
                                                     </tr>
                                                     <? $f++;?>
                                                     <?php } ?>
-                                                    <tr>
+                                                   <tr>
                                                         <td class="dark numb foot">Бонусы</td>
                                                         <td colspan="3">&nbsp;</td>
-                                                        <td class="dark">-70 грн</td>
+                                                        <td class="dark"><?php echo $order['discount']; ?></td>
                                                         <td colspan="3">&nbsp;</td>
                                                     </tr>
                                                     <tr>
                                                         <td class="dark numb foot">Стоимость доставки</td>
                                                         <td colspan="3">&nbsp;</td>
-                                                        <td class="dark">0 грн</td>
+                                                        <td class="dark"><?php echo $order['shipping_price']; ?></td>
                                                         <td colspan="3">&nbsp;</td>
                                                     </tr>
                                                 </table>
@@ -113,8 +113,8 @@
                                                     <?php foreach ($order['products'] as $product) { ?>
                                                     <div class="item">
                                                         <div class="row clearfix">
-                                                            <div class="title">Номер</div>
-                                                            <div class="r-content">922 640138</div>
+                                                            <div class="title">Номер заказа</div>
+                                                            <div class="r-content">#<?php echo $order['order_id']; ?></div>
                                                         </div>
                                                         <div class="row clearfix">
                                                             <div class="title">Название</div>
@@ -124,17 +124,17 @@
                                                             <div class="title">Количество</div>
                                                             <div class="r-content"><?php echo $product['quantity']; ?></div>
                                                         </div>
-                                                        <div class="row clearfix">
+                                                        <!--<div class="row clearfix">
                                                             <div class="title">Размер</div>
                                                             <div class="r-content">36/38</div>
-                                                        </div>
+                                                        </div>-->
                                                         <div class="row clearfix">
                                                             <div class="title">Стоимость</div>
                                                             <div class="r-content"><?php echo $product['total']; ?></div>
                                                         </div>
                                                         <div class="row clearfix">
                                                             <div class="title">Оплата</div>
-                                                            <div class="r-content">безналичный расчет карта приватбанка</div>
+                                                            <div class="r-content"><?php echo $order['payment']; ?></div>
                                                         </div>
                                                         <div class="row clearfix">
                                                             <div class="title">Статус</div>
@@ -142,7 +142,7 @@
                                                         </div>
                                                         <div class="row clearfix">
                                                             <div class="title">Доставка</div>
-                                                            <div class="r-content">Новая почта</div>
+                                                            <div class="r-content"><?php echo $order['shipping']; ?></div>
                                                         </div>
                                                     </div>
                                                    <?php } ?>

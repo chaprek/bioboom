@@ -13,11 +13,43 @@ class ControllerCommonHome extends Controller {
 		}
 		
         
+        /*-MODELS INCLUDE-*/
+        $this->load->model('catalog/information');
+        $this->load->model('tool/image');
+        $this->load->model('catalog/recipe');
+        $this->load->model('catalog/news');
+        
+        
+        
+        /*-VIDEO MAIN-*/
+        
+        $information_info = $this->model_catalog_information->getInformation(15);
+        $this->data['video'] = html_entity_decode($information_info['description'], ENT_QUOTES, 'UTF-8');
+        $this->data['title'] = $information_info['title'];
+        $this->data['description'] = $information_info['meta_description'];
+        /*-END VIDEO MAIN-*/
+        
+        /*-RECIPES MAIN-*/
+        $thos = $this->model_catalog_recipe->getRecipe();
+        
+        $this->data['recipes'] = array();
+        
+        //	foreach ($thos as $result) {
+					$this->data['recipes'] = array(
+						'id'  				=> $thos[0]['recipe_id'],
+						'title'        		=> $thos[0]['title'],
+                        'image'             => $this->model_tool_image->resize($thos[0]['image'], 225, 225),
+						'description'  	    => utf8_substr(strip_tags(html_entity_decode($thos[0]['description'], ENT_QUOTES, 'UTF-8')), 0, 200),
+						'href'         		=> $this->url->link('information/recipe', 'recipe_id=' . $thos[0]['recipe_id']),
+						'posted'   		    => date($this->language->get('date_format_short'), strtotime($thos[0]['date_added']))
+					);
+			//	}
+        
+        
+        /*-END RECIPES MAIN-*/
         
         /*-NEW_BAR-*/
         
-        $this->load->model('catalog/news');
-        $this->load->model('tool/image');
             
 	  		$news_data = $this->model_catalog_news->getNews();
 		
@@ -33,7 +65,8 @@ class ControllerCommonHome extends Controller {
 						'description'  	=> utf8_substr(strip_tags(html_entity_decode($result['description'], ENT_QUOTES, 'UTF-8')), 0, $chars),
 						'href'         	=> $this->url->link('information/news', 'news_id=' . $result['news_id']),
 						'posted'   		=> date($this->language->get('date_format_short'), strtotime($result['date_added'])),
-                        'thumb'         => "image/data/category_img/".substr($result['image'], 10)
+                        'thumb'         => "image/data/category_img/".substr($result['image'], 10),
+                        'image'        => "image/".$result['image']
 					);
                    break; 
 				}
@@ -41,6 +74,8 @@ class ControllerCommonHome extends Controller {
         
         /*-END_NEW_BAR-*/
         
+        /*-MOBILE-*/
+        $this->data['mobile'] = $this->config->get('mobile');
         
           /*-REVIEW-*/
 
@@ -54,16 +89,26 @@ class ControllerCommonHome extends Controller {
           		
                 //print_r($results);
                 
+             shuffle($results);   
+                
     		foreach ($results as $result) {
-    		  
+    		                    
+              if(strlen($result['text']) > 200){
+                $r_text = mb_substr($result['text'], 0, 100,'utf-8')."(...)";
+              } else {
+                $r_text = $result['text'];
+              }
+              
+              
             	$this->data['reviews'][] = array(
             		'author'     => $result['author'],
-    				'text'       => $result['text'],
+    				'text'       => $r_text,
     				'useful'       => $result['useful'],
     				'nouseful'       => $result['nouseful'],
     				'parent_id'       => $result['parent_id'],
     				'review_id'       => $result['review_id'],
-            		'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added']))
+            		'date_added' => date($this->language->get('date_format_short'), strtotime($result['date_added'])),
+                    'href'    	    => $this->url->link('product/product', 'product_id=' . $result['product_id'])
             	);
                 
           	}

@@ -145,7 +145,8 @@ class ControllerInformationNews extends Controller {
 						'description'  	=> utf8_substr(strip_tags(html_entity_decode($result['description'], ENT_QUOTES, 'UTF-8')), 0, $chars),
 						'href'         	=> $this->url->link('information/news', 'news_id=' . $result['news_id']."&category_id=".$category),
 						'posted'   		=> date($this->language->get('date_format_short'), strtotime($result['date_added'])),
-                        'thumb'         => $img
+                        'thumb'         => $img,
+                        'image'         => "image/".$result['image']
 					);
 				}
 			

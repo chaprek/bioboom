@@ -23,7 +23,7 @@
                                 <img src="images/feedback_banner.jpg" alt="">
                             </div>
                             <div class="post-content">
-                                <p>Если у вас возникли технические неполадка на сайте, есть вопросы по товару, доставке, работе магазина или другое - напишите нам. Мы приложим весе усилия, чтобы ответить вам максимально быстро.</p>
+                                <p>Если у Вас возникли технические неполадка на сайте, есть вопросы по товару, доставке, работе магазина или другое - напишите нам. Мы приложим все усилия, чтобы ответить Вам максимально быстро.</p>
                                 
 
   
@@ -51,7 +51,7 @@
                                         <?php } ?>
                                     </div>
                                     <div class="notice">* <?= $entry_captcha?></div>
-                                    <div class="row"><input type="submit" class="btn-green" value="Отправить"></div>
+                                    <div class="row"><input type="submit" onclick="ga('send', 'event', 'Feedback', 'Button');" class="btn-green" value="Отправить"></div>
                                 </form>
                             </div>
                         </div>

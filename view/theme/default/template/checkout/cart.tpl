@@ -1,17 +1,5 @@
 <?php echo $header; ?>
 
-<?php if ($attention) { ?>
-<div class="attention"><?php echo $attention; ?><img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>
-<?php } ?>
-<?php if ($success) { ?>
-<div class="success"><?php echo $success; ?><img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>
-<?php } ?>
-<?php if ($error_warning) { ?>
-<div class="warning"><?php echo $error_warning; ?><img src="catalog/view/theme/default/image/close.png" alt="" class="close" /></div>
-<?php } ?>
-
-
-
 <div id="main">
     <div class="wrapper" role="main">
         <div class="container">
@@ -37,7 +25,8 @@
                                       <?php } ?>
                                 </td>
                                 <td class="info">
-                                    <p><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></p>
+                                                                
+                                    <p><a href="<?php echo $product['href']; ?>" style="<?= (!$product['stock'])?'color: #ad0000;':''?>"><?php echo $product['name']; ?></a></p>
                                     <p>
                                     <?php foreach ($product['option'] as $option) { ?>
                                     <?php echo $option['name']; ?>: <?php echo $option['value']; ?><br />
@@ -48,15 +37,19 @@
                                 <td class="count">
                                     <div class="trade-count">
                                         <input type="text" name="quantity[<?php echo $product['key']; ?>]" value="<?php echo $product['quantity']; ?>" />
-                                        <button type="button" class="inc"></button>
-                                        <button type="button" class="dec"></button>
+                                        <button type="button" class="inc incc"></button>
+                                        <button type="button" class="dec decc"></button>
                                     </div>
                                 </td>
                                 <td class="total"><?php echo $product['total']; ?></td>
                             </tr>
                   <? }?>
                         </table>
+                        
+                        </form>
+                        
                         <div class="cart cart480">
+                        <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
                         <? $all_num = 0;?>
                         <?php foreach ($products as $product) { ?>
                             <div class="item">
@@ -67,7 +60,7 @@
                                       <?php } ?>
                                 </div>
                                 <div class="info row">
-                                    <p><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></p>
+                                    <p><a href="<?php echo $product['href']; ?>" style="<?= (!$product['stock'])?'color: #ad0000;':''?>"><?php echo $product['name']; ?></a></p>
                                     <p>
                                     <?php foreach ($product['option'] as $option) { ?>
                                     <?php echo $option['name']; ?>: <?php echo $option['value']; ?><br />
@@ -77,14 +70,15 @@
                                 </div>
                                 <div class="count row">
                                     <div class="trade-count">
-                                        <input type="text"  name="quantity[<?php echo $product['key']; ?>]" value="<?php echo $all_num += $product['quantity'];?>" />
-                                        <button type="button" class="inc"></button>
-                                        <button type="button" class="dec"></button>
+                                        <input type="text"  name="quantity[<?php echo $product['key']; ?>]" value="<?php echo $product['quantity'];?>" />
+                                        <button type="button" class="inc incc"></button>
+                                        <button type="button" class="dec decc"></button>
                                     </div>
                                 </div>
                                 <div class="total row"><?php echo $product['total']; ?></div>
                             </div>
                         <? }?>
+                        </form>
                         </div>
                         <div class="cart-coupon-container">
                         
@@ -92,13 +86,24 @@
                         
                         <div id="coupon"  class="item">
                         <h3>Использовать купон</h3>
-                          <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
+                        
+                          <form action="<?php echo $action; ?>" method="post" class="aaa" enctype="multipart/form-data">
                             <input type="text" name="coupon" placeholder="<?php echo $entry_coupon; ?>" value="" />
                             <input type="hidden" name="next" value="coupon" />
                             &nbsp;
-                            <a class="help-coupon" href="#">Как получить купон</a>
+                            <a class="help-coupon" style="cursor: pointer;">Как получить купон</a>
                             <input type="submit"  class="btn-submit-gray" value="Применить" class="button" />
                           </form>
+                                                    
+                          <?php if ($attention) { ?>
+                            <div class="attention"><?php echo $attention; ?><!--<img src="catalog/view/theme/default/image/close.png" alt="" class="close" />--></div>
+                            <?php } ?>
+                            <?php if ($success) { ?>
+                            <div class="success"><?php echo $success; ?><!--<img src="catalog/view/theme/default/image/close.png" alt="" class="close" />--></div>
+                            <?php } ?>
+                            <?php if ($error_warning) { ?>
+                            <div class="warning" style="color: #ad0000;"><?php echo $error_warning; ?><!--<img src="catalog/view/theme/default/image/close.png" alt="" class="close" />--></div>
+                            <?php } ?>
                         </div>
     
                             
@@ -124,9 +129,17 @@
                               
                               
                                 <table class="min-order">
+                                    <tr style="border-bottom: 1px solid #CCCCCC;">
+                                        <td><p>Бесплатная доставка по Киеву и Украине</p></td>
+                                        <td>
+                                        <p style="color: #ccc;">от </p>                                        
+                                        <span>501<sup>*</sup></span> грн</td>
+                                    </tr>
                                     <tr>
-                                        <td>Минимальная сумма заказа</td>
-                                        <td><span>250<sup>*</sup></span> грн</td>
+                                        <td>Бесплатная доставка по Киевской области</td>
+                                        <td>
+                                        <p  style="color: #ccc;">от </p>  
+                                        <span>1001<sup>*</sup></span> грн</td>
                                     </tr>
                                 </table>
                                 <div class="notice">* с учетом скидок</div>
@@ -139,18 +152,21 @@
                                     </tr>
                                     <tr>
                                         <td>Сумма</td>
-                                        <td><span><?= $totals[0]['text']?></span></td>
+                                        <td><span><?= $allsum?></span></td>
                                     </tr>
                                     <tr>
                                         <td>Скидка</td>
-                                        <td>10%</td>
+                                        <td><?= $coupon_sum?></td>
                                     </tr>
                                 </table>
-                                <a href="<?php echo $checkout; ?>" class="btn-green"><?php echo $button_checkout; ?></a>
+                                <a <?= ($isLogged)?'href="'.$checkout.'"':'' ?> class="btn-green <?= ($isLogged)?'':'fancy-login'?>"><?php echo $button_checkout; ?></a>
                             </div>
                         </div>
-                        </form>
                     </div>
+                    
+                    <? if(!$isLogged || !$wishes){?>
+                        <?php echo $content_bottom; ?>
+                    <? } else {?>
                     <div class="cart-wishes">
                         <h2 class="personal-title">Мои желания</h2>
                         <div class="catalog grid catalog-page catalog-wishes">
@@ -161,17 +177,17 @@
                                     <article class="item"  id="wishlist-row<?php echo $product['product_id']; ?>">
                                     <?php if ($product['thumb']) { ?>
                                         <a href="<?php echo $product['href']; ?>" class="thumb">
-                                        <img src="<?php echo $product['thumb']; ?>" alt="<?php echo $product['name']; ?>" title="<?php echo $product['name']; ?>" />
-                                        <a href="<?php echo $product['remove']; ?>" class="delete"></a>
+                                            <div>
+                                                <img src="<?php echo $product['thumb']; ?>" alt="<?php echo $product['name']; ?>" title="<?php echo $product['name']; ?>" />
+                                                <div href="<?php echo $product['remove']; ?>" class="delete"></div>
+                                            </div>
                                         </a>
                                     <?php } ?>
                                     <div class="content">
                                                 <h3><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></h3>
                                                 <div class="price"><?php echo $product['price']; ?></div>
                                                 <div class="excerpt">
-                                                    <p>номер: <?php echo $product['product_id']; ?></p>
-                                                    <p>цвет: перламутровые пуговки</p>
-                                                    <p>размер: 36</p>
+                                                    <p></p>
                                                 </div>
                                                 <a onclick="addToCart('<?php echo $product['product_id']; ?>');" class="add-to-cart" title="Добавить в корзину"></a>
                                             </div>
@@ -180,69 +196,36 @@
                                      <?php } ?>
                             
                             <?php } ?>
-                                <article class="item">
-                                    <a href="#" class="thumb">
-                                        <span class="delete"></span>
-                                        <img src="images/catalog/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="content">
-                                        <h3><a href="#">Органические макароны Linguine (Линквин) 500 гр</a></h3>
-                                        <div class="price">100 грн</div>
-                                        <div class="excerpt">
-                                            <p>номер: 2341546</p>
-                                            <p>цвет: перламутровые пуговки</p>
-                                            <p>размер: 36</p>
-                                        </div>
-                                        <a href="#" class="add-to-cart" title="Добавить в корзину"></a>
-                                    </div>
-                                </article>
-                                <article class="item">
-                                    <a href="#" class="thumb">
-                                        <span class="delete"></span>
-                                        <img src="images/catalog/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="content">
-                                        <h3><a href="#">Органические макароны Linguine (Линквин) 500 гр</a></h3>
-                                        <div class="price">100 грн</div>
-                                        <div class="excerpt">
-                                            <p>номер: 2341546</p>
-                                            <p>цвет: перламутровые пуговки</p>
-                                            <p>размер: 36</p>
-                                        </div>
-                                        <a href="#" class="add-to-cart" title="Добавить в корзину"></a>
-                                    </div>
-                                </article>
-                                <article class="item">
-                                    <a href="#" class="thumb">
-                                        <span class="delete"></span>
-                                        <img src="images/catalog/img-1.jpg" alt="">
-                                    </a>
-                                    <div class="content">
-                                        <h3><a href="#">Органические макароны Linguine (Линквин) 500 гр</a></h3>
-                                        <div class="price">100 грн</div>
-                                        <div class="excerpt">
-                                            <p>номер: 2341546</p>
-                                            <p>цвет: перламутровые пуговки</p>
-                                            <p>размер: 36</p>
-                                        </div>
-                                        <a href="#" class="add-to-cart" title="Добавить в корзину"></a>
-                                    </div>
-                                </article>
                             </div>
                         </div>
                     </div>
+                    
+                    <? }?>
+                    
+                    
+                    
                 </div>
             </div>
         </div>
     </div>
     <div id="clear"></div>
+    
+    <div class="pop_up" style="height: auto;">
+        <h3>Не упустите свой шанс получить купон на скидку:</h3>
+        <p>- Посещайте нашу страничку на Facebook или Вконтакте</p>
+        <p>- Подписывайтесь на электронную рассылку</p>
+        <p>- Регулярно входите в свой профиль в магазине</p>
+        <p class="ext">* В корзине Вы можете активировать ТОЛЬКО ОДИН код купона.</p>
+        <div class="exit">X</div>
+    </div>
+    
 </div>
 </div>
 
 
  
  
-  
+  <!--
   <div class="cart-total">
     <table id="total">
       <?php foreach ($totals as $total) { ?>
@@ -258,6 +241,8 @@
     <div class="center"><a href="<?php echo $continue; ?>" class="button"><?php echo $button_shopping; ?></a></div>
   </div>
   <?php echo $content_bottom; ?></div>
+  -->
+  
 <script type="text/javascript"><!--
 /*-$('input[name=\'next\']').bind('change', function() {
 	$('.cart-module > div').hide();
@@ -267,6 +252,14 @@
 //--></script>
 <?php if ($shipping_status) { ?>
 <script type="text/javascript"><!--
+
+$('.help-coupon').click(function(){
+   $('.pop_up').fadeIn(); 
+});
+$('.exit').click(function(){
+   $('.pop_up').fadeOut(); 
+});
+
 $('#button-quote').live('click', function() {
 	$.ajax({
 		url: 'index.php?route=checkout/cart/quote',

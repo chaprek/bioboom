@@ -18,11 +18,7 @@ class ControllerAccountAccount extends Controller {
 		
 		$this->load->model('account/customer');
 		$this->load->model('account/address');
-		
-       // if(($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()){
-//            echo "FFFFDD";
-//        }
-        
+		        
         
 		if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 		  
@@ -74,6 +70,12 @@ class ControllerAccountAccount extends Controller {
 			'href'      => $this->url->link('account/account', '', 'SSL'),
         	'separator' => $this->language->get('text_separator')
       	);
+        
+        $this->data['breadcrumbs'][] = array(       	
+        	'text'      => $this->language->get('text_personal_data'),
+			'href'      => $this->url->link('account/account', '', 'SSL'),
+        	'separator' => $this->language->get('text_separator')
+      	);
 		
 		if (isset($this->session->data['success'])) {
     		$this->data['success'] = $this->session->data['success'];
@@ -114,7 +116,7 @@ class ControllerAccountAccount extends Controller {
         $this->data['text_your_details'] = $this->language->get('text_your_details');
 
 		$this->data['entry_firstname'] = $this->language->get('entry_firstname');
-		$this->data['entry_lastname'] = $this->language->get('entry_lastname');
+		//$this->data['entry_lastname'] = $this->language->get('entry_lastname');
 		$this->data['entry_email'] = $this->language->get('entry_email');
 		$this->data['entry_telephone'] = $this->language->get('entry_telephone');
 		$this->data['entry_fax'] = $this->language->get('entry_fax');
@@ -133,8 +135,13 @@ class ControllerAccountAccount extends Controller {
          
          
          /*-ADRESSES-*/
-         $this->data['entry_firstname'] = $this->language->get('entry_firstname');
-    	$this->data['entry_lastname'] = $this->language->get('entry_lastname');
+        $this->data['entry_firstname'] = $this->language->get('entry_firstname');
+        $this->data['client_firstname'] = $this->language->get('client_firstname');
+        $this->data['entry_city'] = $this->language->get('entry_city');
+        $this->data['entry_sex'] = $this->language->get('entry_sex');
+        $this->data['client_telephone'] = $this->language->get('client_telephone');
+        $this->data['client_birth'] = $this->language->get('client_birth');
+    	//$this->data['entry_lastname'] = $this->language->get('entry_lastname');
     	$this->data['entry_company'] = $this->language->get('entry_company');
 		$this->data['entry_company_id'] = $this->language->get('entry_company_id');
 		$this->data['entry_tax_id'] = $this->language->get('entry_tax_id');		
@@ -152,12 +159,6 @@ class ControllerAccountAccount extends Controller {
     		$this->data['error_firstname'] = $this->error['firstname'];
 		} else {
 			$this->data['error_firstname'] = '';
-		}
-		
-		if (isset($this->error['lastname'])) {
-    		$this->data['error_lastname'] = $this->error['lastname'];
-		} else {
-			$this->data['error_lastname'] = '';
 		}
 		
   		if (isset($this->error['company_id'])) {
@@ -322,11 +323,11 @@ class ControllerAccountAccount extends Controller {
 			$this->data['error_firstname'] = '';
 		}
 
-		if (isset($this->error['lastname'])) {
-			$this->data['error_lastname'] = $this->error['lastname'];
-		} else {
-			$this->data['error_lastname'] = '';
-		}
+	//	if (isset($this->error['lastname'])) {
+//			$this->data['error_lastname'] = $this->error['lastname'];
+//		} else {
+//			$this->data['error_lastname'] = '';
+//		}
 		
 		if (isset($this->error['email'])) {
 			$this->data['error_email'] = $this->error['email'];
@@ -404,6 +405,22 @@ class ControllerAccountAccount extends Controller {
 		} else {
 			$this->data['lastname'] = '';
 		}
+        
+       	if (isset($this->request->post['sex'])) {
+			$this->data['sex'] = $this->request->post['sex'];
+		} elseif (isset($customer_info)) {
+			$this->data['sex'] = $customer_info['sex'];
+		} else {
+			$this->data['sex'] = '';
+		}
+        
+        if (isset($this->request->post['birth'])) {
+			$this->data['birth'] = $this->request->post['birth'];
+		} elseif (isset($customer_info)) {
+			$this->data['birth'] = $customer_info['birth'];
+		} else {
+			$this->data['birth'] = '';
+		}
 
 		if (isset($this->request->post['email'])) {
 			$this->data['email'] = $this->request->post['email'];
@@ -450,9 +467,9 @@ class ControllerAccountAccount extends Controller {
 			$this->error['firstname'] = $this->language->get('error_firstname');
 		}
 
-		if ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
-			$this->error['lastname'] = $this->language->get('error_lastname');
-		}
+		//if ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
+//			$this->error['lastname'] = $this->language->get('error_lastname');
+//		}
 
 		if ((utf8_strlen($this->request->post['email']) > 96) || !$this->ocstore->validate($this->request->post['email'])) {
 			$this->error['email'] = $this->language->get('error_email');
@@ -476,10 +493,6 @@ class ControllerAccountAccount extends Controller {
         }
         if ((utf8_strlen($this->request->post['firstname']) < 1) || (utf8_strlen($this->request->post['firstname']) > 32)) {
       		$this->error['firstname'] = $this->language->get('error_firstname');
-    	}
-
-    	if ((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 32)) {
-      		$this->error['lastname'] = $this->language->get('error_lastname');
     	}
 
     	if ((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {

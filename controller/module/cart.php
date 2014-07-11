@@ -42,7 +42,14 @@ class ControllerModuleCart extends Controller {
 				}
 	
 				array_multisort($sort_order, SORT_ASC, $total_data);			
-			}		
+			}	
+            
+		} 
+        
+        if ($this->customer->isLogged()){
+            $this->data['checkout'] = $this->url->link('checkout/checkout', '', 'SSL');	
+        } else {
+		  $this->data['checkout'] = $this->url->link('checkout/cart', '', 'SSL');
 		}
 		
 		$this->data['totals'] = $total_data;
@@ -127,7 +134,7 @@ class ControllerModuleCart extends Controller {
 					
 		$this->data['cart'] = $this->url->link('checkout/cart');
 						
-		$this->data['checkout'] = $this->url->link('checkout/checkout', '', 'SSL');
+		
 	
 		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/module/cart.tpl')) {
 			$this->template = $this->config->get('config_template') . '/template/module/cart.tpl';

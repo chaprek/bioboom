@@ -1,7 +1,8 @@
 <?php
 class ModelTotalShipping extends Model {
 	public function getTotal(&$total_data, &$total, &$taxes) {
-		if ($this->cart->hasShipping() && isset($this->session->data['shipping_method'])) {
+	   //$this->cart->hasShipping() && добавить в if
+		if (isset($this->session->data['shipping_method'])) {
 			$total_data[] = array( 
 				'code'       => 'shipping',
         		'title'      => $this->session->data['shipping_method']['title'],
@@ -23,7 +24,18 @@ class ModelTotalShipping extends Model {
 			}
 			
 			$total += $this->session->data['shipping_method']['cost'];
-		}			
+		}	
+        
+       // else {
+//		  if ($this->cart->hasShipping()){
+//		  $total += 100500;
+//		 } elseif(isset($this->session->data['shipping_method'])){
+//		  $total += 200500;
+//		 } else {
+//		  $total += 300500;
+//		 }
+//        
+//        }		
 	}
 }
 ?>

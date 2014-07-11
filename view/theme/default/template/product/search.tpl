@@ -1,12 +1,24 @@
-<?php echo $header; ?><?php echo $column_left; ?><?php echo $column_right; ?>
-<div id="content"><?php echo $content_top; ?>
-  <div class="breadcrumb">
-    <?php foreach ($breadcrumbs as $breadcrumb) { ?>
-    <?php echo $breadcrumb['separator']; ?><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a>
-    <?php } ?>
-  </div>
+<?php echo $header; ?>
+
+ <div id="main">
+        <div class="wrapper" role="main">
+            <div class="container">
+                <div class="page">
+                
+                    <div class="breadcrumbs">
+                      <?php foreach ($breadcrumbs as $breadcrumb) { ?>
+                    <?php echo $breadcrumb['separator']; ?><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a>
+                    <?php } ?>
+                    </div>
+                    
+<div class="main-content clearfix">
+                  <!--  <aside class="sidemenu">
+                            <?php echo $column_right; ?>       
+                    </aside>-->
+
+
   <h1><?php echo $heading_title; ?></h1>
-  <b><?php echo $text_critea; ?></b>
+<!--  <b><?php echo $text_critea; ?></b>
   <div class="content">
     <p><?php echo $entry_search; ?>
       <?php if ($filter_name) { ?>
@@ -55,9 +67,9 @@
   <div class="buttons">
     <div class="right"><input type="button" value="<?php echo $button_search; ?>" id="button-search" class="button" /></div>
   </div>
-  <h2><?php echo $text_search; ?></h2>
+  <h2><?php echo $text_search; ?></h2>-->
   <?php if ($products) { ?>
-  <div class="product-filter">
+ <!-- <div class="product-filter">
     <div class="display"><b><?php echo $text_display; ?></b> <?php echo $text_list; ?> <b>/</b> <a onclick="display('grid');"><?php echo $text_grid; ?></a></div>
     <div class="limit"><?php echo $text_limit; ?>
       <select onchange="location = this.value;">
@@ -82,42 +94,54 @@
       </select>
     </div>
   </div>
-  <div class="product-compare"><a href="<?php echo $compare; ?>" id="compare-total"><?php echo $text_compare; ?></a></div>
-  <div class="product-list">
-    <?php foreach ($products as $product) { ?>
-    <div>
-      <?php if ($product['thumb']) { ?>
-      <div class="image"><a href="<?php echo $product['href']; ?>"><img src="<?php echo $product['thumb']; ?>" title="<?php echo $product['name']; ?>" alt="<?php echo $product['name']; ?>" /></a></div>
-      <?php } ?>
-      <div class="name"><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></div>
-      <div class="description"><?php echo $product['description']; ?></div>
-      <?php if ($product['price']) { ?>
-      <div class="price">
-        <?php if (!$product['special']) { ?>
-        <?php echo $product['price']; ?>
-        <?php } else { ?>
-        <span class="price-old"><?php echo $product['price']; ?></span> <span class="price-new"><?php echo $product['special']; ?></span>
-        <?php } ?>
-        <?php if ($product['tax']) { ?>
-        <br />
-        <span class="price-tax"><?php echo $text_tax; ?> <?php echo $product['tax']; ?></span>
-        <?php } ?>
-      </div>
-      <?php } ?>
-      <?php if ($product['rating']) { ?>
-      <div class="rating"><img src="catalog/view/theme/default/image/stars-<?php echo $product['rating']; ?>.png" alt="<?php echo $product['reviews']; ?>" /></div>
-      <?php } ?>
-      <div class="cart"><input type="button" value="<?php echo $button_cart; ?>" onclick="addToCart('<?php echo $product['product_id']; ?>');" class="button" /></div>
-      <div class="wishlist"><a onclick="addToWishList('<?php echo $product['product_id']; ?>');"><?php echo $button_wishlist; ?></a></div>
-      <div class="compare"><a onclick="addToCompare('<?php echo $product['product_id']; ?>');"><?php echo $button_compare; ?></a></div>
+  <div class="product-compare"><a href="<?php echo $compare; ?>" id="compare-total"><?php echo $text_compare; ?></a></div>-->
+  
+  
+  <div class="cart-wishes">
+    <div class="catalog grid catalog-page catalog-wishes">
+        <div class="items">
+  
+            <?php foreach ($products as $product) { ?>
+            
+            <article class="item">
+            <?php if ($product['thumb']) { ?>
+                <a href="<?php echo $product['href']; ?>" class="thumb">
+                    <div>
+                    <img src="<?php echo $product['thumb']; ?>" title="<?php echo $product['name']; ?>" alt="<?php echo $product['name']; ?>"  />
+                    </div>
+                </a>
+            <?php } ?>
+            <div class="content">
+            <h3><a href="<?php echo $product['href']; ?>"><?php echo $product['name']; ?></a></h3>
+            <?php if ($product['price']) { ?>
+            <div class="price"><?php echo $product['price']; ?></div>
+            <?php } ?>
+            <a class="add-to-cart" onclick="addToCart('<?php echo $product['product_id']; ?>');"  title="Добавить в корзину"></a>
+            </div>
+            </article>
+        
+            <?php } ?>
+    
+        </div>
     </div>
-    <?php } ?>
+    
+    
   </div>
   <div class="pagination"><?php echo $pagination; ?></div>
   <?php } else { ?>
   <div class="content"><?php echo $text_empty; ?></div>
+  
   <?php }?>
-  <?php echo $content_bottom; ?></div>
+  <?php echo $content_bottom; ?>
+  
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+    <div id="clear" style="height: 289px;"></div>
+  </div>
 <script type="text/javascript"><!--
 $('#content input[name=\'filter_name\']').keydown(function(e) {
 	if (e.keyCode == 13) {

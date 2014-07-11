@@ -56,7 +56,7 @@ class ControllerModuleNews extends Controller {
         foreach ($category as $cat) {
 			$this->data['category'][] = array(
 				'title'        		=> $cat['name'],
-				'href'         		=> $this->url->link('information/news', 'category_id=' . $cat['category_id'])
+				'href'         		=> $this->url->link('information/news', 'category_id='. $cat['category_id'])
 			);
 		}
         

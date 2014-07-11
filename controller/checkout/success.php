@@ -63,7 +63,7 @@ class ControllerCheckoutSuccess extends Controller {
 		}
 		
 		if ($this->customer->isLogged()) {
-			$this->data['text_message'] = sprintf($this->language->get('text_customer'), $this->url->link('account/order/info&order_id=' . $this->session->data['last_order_id'], '', 'SSL'), $this->session->data['last_order_id'], $this->url->link('account/account', '', 'SSL'), $this->url->link('account/order', '', 'SSL'), $this->url->link('account/download', '', 'SSL'), $this->url->link('information/contact'));
+			$this->data['text_message'] = sprintf($this->language->get('text_customer'), $this->session->data['last_order_id'], $this->url->link('account/account', '', 'SSL'), $this->url->link('account/order', '', 'SSL'),  $this->url->link('information/feedback'));
 		} else {
     		$this->data['text_message'] = sprintf($this->language->get('text_guest'), $this->session->data['last_order_id'], $this->url->link('information/contact'));
 		}
@@ -71,6 +71,11 @@ class ControllerCheckoutSuccess extends Controller {
     	$this->data['button_continue'] = $this->language->get('button_continue');
 
     	$this->data['continue'] = $this->url->link('common/home');
+        
+        $this->data['order_info'] = json_decode($this->session->data['order_info'], true);
+        $this->data['order_id'] = $this->session->data['last_order_id'];
+
+        unset($this->session->data['order_info']);
 
 		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/common/success.tpl')) {
 			$this->template = $this->config->get('config_template') . '/template/common/success.tpl';

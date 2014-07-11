@@ -14,7 +14,7 @@
         <textarea  name="text"></textarea>
     </div>
     <div class="row">
-        <label>Оцените товар</label>
+        <label class="setrew">Оцените товар</label>
         <div class="raiting"><div></div></div>
     </div>
     <div class="row">

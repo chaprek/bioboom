@@ -24,7 +24,7 @@
                         
                            <? if (isset($news_data)) { ?>
                             <div class="category-pict">
-                                <img src="images/ecology/banner.jpg" alt="">
+                                <img src="images/ecology/banner.jpg" alt="" />
                             </div>
                             <div class="archive">
                             
@@ -32,7 +32,7 @@
                             
                             <div class="item">
                                     <a href="<?php echo $news['href']; ?>" class="thumb">
-                                        <img src="<?= $news['thumb']?>" alt="<?php echo $news['title']; ?>"/>
+                                        <img src="<?= $news['image']?>" alt="<?php echo $news['title']; ?>"/>
                                     </a>
                             
                                     <div class="description">

@@ -1,12 +1,34 @@
 <?php   
 class ControllerCommonHeader extends Controller {
 	protected function index() {
+
+	if (isset($GLOBALS["pagin_next"])) {
+	$this->data['pagin_next']=$GLOBALS["pagin_next"];
+	}
+	if (isset($GLOBALS["pagin_prev"])) {
+	$this->data['pagin_prev']=$GLOBALS["pagin_prev"];
+	}
+	$this->data['canonical']=false;
+		if (isset($this->request->get['path']) && (isset($this->request->get['filter']) || isset($this->request->get['sort']) || isset($this->request->get['limit']) || isset($this->request->get['order']))) {
+				$this->data['canonical']=true;
+				
+				$path = (string)$this->request->get['path'];
+				$this->data['can_url']=$this->url->link('product/category', 'path='.$path);
+		}
+		
+		
 		$this->data['title'] = $this->document->getTitle();
 		
 		if (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) {
 			$this->data['base'] = $this->config->get('config_ssl');
 		} else {
 			$this->data['base'] = $this->config->get('config_url');
+		}
+        
+        if (isset($this->request->server['REQUEST_URI'])) {
+			$this->data['reques'] = $this->request->server['REQUEST_URI'];	
+		} else {
+			$this->data['reques'] = '';
 		}
 		
 		$this->data['description'] = $this->document->getDescription();
@@ -64,7 +86,7 @@ class ControllerCommonHeader extends Controller {
 		} else {
 			$this->data['logo'] = '';
 		}
-		$this->data['og_url'] = (isset($this->request->server['HTTPS']) ? HTTPS_SERVER : HTTP_SERVER) . $this->request->server['REQUEST_URI'];
+		$this->data['og_url'] = (isset($this->request->server['HTTPS']) ? HTTPS_SERVER : HTTP_SERVER) . substr($this->request->server['REQUEST_URI'], 1, strlen ( $this->request->server['REQUEST_URI'] )-1);
 		$this->data['og_image'] = $this->document->getOgImage();
 		
 		$this->data['text_home'] = $this->language->get('text_home');
@@ -88,6 +110,62 @@ class ControllerCommonHeader extends Controller {
 		} else {
 			$this->data['filter_name'] = '';
 		}
+        
+        /*-LOGIN-*/
+        $this->language->load('account/login');
+    	$this->data['text_forgotten'] = $this->language->get('text_forgotten');
+
+    	$this->data['entry_email'] = $this->language->get('entry_email');
+    	$this->data['entry_password'] = $this->language->get('entry_password');
+
+    	$this->data['button_continue'] = $this->language->get('button_continue');
+		$this->data['button_login'] = $this->language->get('button_login');
+		$this->data['from_cart'] = (isset($_GET['cart']))?true:false;
+        
+        $this->data['action_l'] = $this->url->link('account/login', '', 'SSL');
+		$this->data['register'] = $this->url->link('account/register', '', 'SSL');
+		$this->data['forgotten'] = $this->url->link('account/forgotten', '', 'SSL');
+        
+        if (isset($this->request->post['email'])) {
+			$this->data['email_l'] = $this->request->post['email'];
+		} else {
+			$this->data['email_l'] = '';
+		}
+        if (isset($this->request->post['password'])) {
+			$this->data['password_l'] = $this->request->post['password'];
+		} else {
+			$this->data['password_l'] = '';
+		}
+        
+        /*-END LOGIN-*/
+        
+        
+        /*-REGISTRATION-*/
+        $this->language->load('account/register');
+        $this->data['entry_firstname'] = $this->language->get('entry_firstname');
+    	$this->data['text_your_password'] = $this->language->get('text_your_password');
+    	$this->data['entry_email'] = $this->language->get('entry_email');
+        
+		$this->data['action_r'] = $this->url->link('account/register', '', 'SSL');
+		
+		if (isset($this->request->post['firstname'])) {
+    		$this->data['firstname_r'] = $this->request->post['firstname'];
+		} else {
+			$this->data['firstname_r'] = '';
+		}
+        if (isset($this->request->post['email'])) {
+    		$this->data['email_r'] = $this->request->post['email'];
+		} else {
+			$this->data['email_r'] = '';
+		}
+        if (isset($this->request->post['password'])) {
+    		$this->data['password_r'] = $this->request->post['password'];
+		} else {
+			$this->data['password_r'] = '';
+		}
+        
+        
+        /*-END REGISTRATION-*/
 		
 		// Menu
 		if (isset($this->request->get['path'])) {
@@ -117,10 +195,12 @@ class ControllerCommonHeader extends Controller {
             $this->data['products'] = array();
 			
 			$data = array(
-				'filter_category_id' => $category['category_id']
+				'filter_category_id' => $category['category_id'], 
+                'filter_sub_category' => 1
 			);
 			$results = $this->model_catalog_product->getProducts($data);
 			
+            //echo count($results)."--";
             
 			foreach ($results as $result) {
 				if ($result['image']) {
@@ -134,21 +214,52 @@ class ControllerCommonHeader extends Controller {
 				} else {
 					$price = false;
 				}
+                
+                
+                if ((float)$result['special']) {
+					$special = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')));
+				} else {
+					$special = false;
+				}
 				
-			
-				$this->data['products'][] = array(
-					'product_id'  => $result['product_id'],
-					'thumb'       => $image,
-					'name'        => $result['name'],
-					'price'       => $price,
-					'rating'      => $result['rating'],
-					'href'        => $this->url->link('product/product', 'product_id=' . $result['product_id'].'&path=' . $category['category_id'])
-				);
+			     if($result['upc'] == 1){
+    				$this->data['products'][] = array(
+    					'product_id'  => $result['product_id'],
+    					'thumb'       => $image,
+    					'name'        => $result['name'],
+    					'price'       => $price,
+					    'special'     => $special,
+    					'rating'      => $result['rating'],
+    					'upc'         => $result['upc'],
+    					'href'        => $this->url->link('product/product', 'product_id=' . $result['product_id'].'&path=' . $category['category_id'])
+    				);
+                }
 			}
                 
                 
-                
-                
+                /*-Recipes-*/
+                $this->data['recipes'] = array();
+                $this->load->model('catalog/recipe');
+                $recipe_data = $this->model_catalog_recipe->getRecipe(false);
+                $i=0;
+                foreach($recipe_data as $recip){
+                    if ($recip['image']) {
+    					$image = $this->model_tool_image->resize($recip['image'], $this->config->get('config_image_product_width'), $this->config->get('config_image_product_height'));
+    				} else {
+    					$image = false;
+    				}
+                  // echo $category['category_id'].$recip['in_menu'];
+                if($recip['in_menu'] == $category['category_id']){
+                    //echo $recip['title'];
+    				$this->data['recipes'] = array(
+    					'image'       => $image,
+    					'title'       => $recip['title'],
+    					'description' => $recip['description'],
+    					'href'        => $this->url->link('information/recipe', 'recipe_id=' . $recip['recipe_id'])
+    				);
+                    
+                }
+                }
                 
 				foreach ($children as $child) {
 				    
@@ -178,9 +289,9 @@ class ControllerCommonHeader extends Controller {
 						'href'  => $this->url->link('product/category', 'path=' . $category['category_id'] . '_' . $child['category_id'])	
 					);						
 				}
-                            
+                    //echo count($this->data['products'])."--";        
                 if(count($this->data['products']) != 0){
-                    $rand_pr = rand(0, (count($this->data['products']) - 1));
+                    $rand_pr = rand(0, (count($this->data['products']) - 1));//count($this->data['products'])
                 } else {
                     $rand_pr = false;
                 }
@@ -192,7 +303,8 @@ class ControllerCommonHeader extends Controller {
 					'active'   => in_array($category['category_id'], $parts),
 					'column'   => $category['column'] ? $category['column'] : 1,
 					'href'     => $this->url->link('product/category', 'path=' . $category['category_id']),
-                    'rand_product' => ($rand_pr !==false && isset($this->data['products'][$rand_pr]))?$this->data['products'][$rand_pr]:false
+                    'rand_product' => ($rand_pr !==false && isset($this->data['products'][$rand_pr]))?$this->data['products'][$rand_pr]:false,
+                    'recipes'  => $this->data['recipes']
 				);
 			}
 		}

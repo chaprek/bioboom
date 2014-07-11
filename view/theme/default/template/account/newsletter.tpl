@@ -13,7 +13,6 @@
                     <aside class="sidemenu">
                         <?php echo $column_right; ?>
                     </aside>
-  
             <div class="big-side">
                         <h1 class="personal-title"><?php echo $heading_title; ?></h1>
                         <div class="content">

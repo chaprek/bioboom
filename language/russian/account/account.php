@@ -3,7 +3,7 @@
 $_['heading_title']      = 'Личный Кабинет';
 
 // Text
-$_['text_account']       = 'Личный Кабинет';
+$_['text_account']       = 'Мой профиль';
 $_['text_my_account']    = 'Учётная запись';
 $_['text_my_orders']     = 'Мои заказы';
 $_['text_my_newsletter'] = 'Подписка';

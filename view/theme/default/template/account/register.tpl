@@ -15,7 +15,7 @@
                         <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
                             <div class="left-col">
                                 <img src="images/create_account.png" alt="">
-                                <div class="text">Какй-то завораживающий текст. Какй-то завораживающий текст. Какй-то завораживающий текст</div>
+                                <!--<div class="text">Какй-то завораживающий текст. Какй-то завораживающий текст. Какй-то завораживающий текст</div>-->
                             </div>
                             <div class="mid-col">
                             <?php if ($error_warning) { ?>
@@ -65,24 +65,30 @@
                                 </div>
                                 <div class="row">
                                     <label><?php echo $entry_country; ?><span class="required">*</span></label>
-                                    <select name="country_id">
-                                      <option value=""><?php echo $text_select; ?></option>
-                                      <?php foreach ($countries as $country) { ?>
-                                      <?php if ($country['country_id'] == $country_id) { ?>
-                                      <option value="<?php echo $country['country_id']; ?>" data-iso2="<?php echo $country['iso_code_2']; ?>" selected="selected"><?php echo $country['name']; ?></option>
-                                      <?php } else { ?>
-                                      <option value="<?php echo $country['country_id']; ?>" data-iso2="<?php echo $country['iso_code_2']; ?>"><?php echo $country['name']; ?></option>
-                                      <?php } ?>
-                                      <?php } ?>
-                                    </select>
+                                    <div class="c-select">
+                                        <div class="pointer"></div>
+                                        <select name="country_id">
+                                          <option value=""><?php echo $text_select; ?></option>
+                                          <?php foreach ($countries as $country) { ?>
+                                          <?php if ($country['country_id'] == $country_id) { ?>
+                                          <option value="<?php echo $country['country_id']; ?>" data-iso2="<?php echo $country['iso_code_2']; ?>" selected="selected"><?php echo $country['name']; ?></option>
+                                          <?php } else { ?>
+                                          <option value="<?php echo $country['country_id']; ?>" data-iso2="<?php echo $country['iso_code_2']; ?>"><?php echo $country['name']; ?></option>
+                                          <?php } ?>
+                                          <?php } ?>
+                                        </select>
+                                    </div>
                                     <?php if ($error_country) { ?>
                                     <span class="error"><?php echo $error_country; ?></span>
                                     <?php } ?>
                                 </div>
                                 <div class="row">
                                     <label><?php echo $entry_zone; ?><span class="required">*</span></label>
-                                    <select name="zone_id">
-                                    </select>
+                                    <div class="c-select">
+                                        <div class="pointer"></div>
+                                        <select name="zone_id">
+                                        </select>
+                                    </div>
                                     <?php if ($error_zone) { ?>
                                     <span class="error"><?php echo $error_zone; ?></span>
                                     <?php } ?>
@@ -94,7 +100,7 @@
                                     <?php if ($error_password) { ?>
                                     <span class="error"><?php echo $error_password; ?></span>
                                     <?php } ?></td>                                    
-                                    <div class="notice">Только такие и такие символы</div>
+                                   <!-- <div class="notice">Только такие и такие символы</div>-->
                                 </div>
                                 <div class="row">
                                     <label><?php echo $entry_confirm; ?><span class="required">*</span></label>

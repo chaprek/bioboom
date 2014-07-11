@@ -37,7 +37,7 @@
                                     Если у Вас возникли вопросы или
                                     Вам необходима помощь с
                                     Учетной записью, Вы можете
-                                    <a href="#" class="underlink">связаться с нами</a>.
+                                    <a href="http://bioboom.ua/index.php?route=information/feedback" class="underlink">связаться с нами</a>.
                                 </div>
                             </div>
                         </aside>
@@ -69,9 +69,9 @@
                                                 <div class="centered">
                                                     <a href="<?php echo $forgotten; ?>" class="forget-pass"><?php echo $text_forgotten; ?></a>
                                                 </div>
-                                                <!--<div class="remember-user">
+                                                <div class="remember-user">
                                                     <label class="remember" for="remember">Запомнить</label><input type="checkbox" id="remember">
-                                                </div>-->
+                                                </div>
                                             </div>
                                             <div class="row centered">
                                                 <input type="submit" value="<?php echo $button_login; ?>" class="btn-submit-mid button" />

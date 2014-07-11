@@ -4,14 +4,72 @@
 
 <div id="main">
             <div class="wrapper" role="main">
-                <div class="container">
+			<?/*<h1>Интернет-магазин натуральных продуктов БиоБум™</h1>*/?>
+			    <div class="container">
 
 <?php echo $content_top; ?>
-<h1 style="display: none;"><?php echo $heading_title; ?></h1>
-<?php echo $content_bottom; ?>
+                             <!--   <div class="video recipe-products" id="video-popup"  style="display: none">
+                                    <a href="#" class="close"></a>
+                                    <div class="container clearfix" id="videoY">
+                                        <?= $video?>
+                                    </div>
+                                </div>
+                                <div style="display: none;">
+                                <? print_r($recipes)?>
+                                </div>
 
-  <div class="bottom-sections clearfix">
+                                <a class="video-link" data-ob="lightbox" href="http://www.youtube.com/embed/EPo5wWmKEaI<?= ($mobile)?'?autoplay=1':''?>">d</a>
+                                -->
+                                
+                                
+                <div class="middle-section">
+                        <section class="videos index-promo">
+                            <h2 class="videos-title"><?= $title?></h2>
+                            <article class="s-article">
+                                <a data-ob="lightbox" href="<?= $video?><?= ($mobile)?'?autoplay=1':''?>"  class="thumb video-thumb fancy-thumb video-link"><img src="images/video.png" alt=""></a>
+                               
+                                <div class="description">
+                                    <div class="excerpt"><?= $description?></div>
+                                </div>
+                            </article>
+                        </section>
                         <section class="food-articles index-promo">
+                            <h2>ГОТОВИМ ОРГАНИЧНО</h2>
+                            <article class="s-article">
+                                <a href="<?= $recipes['href']?>" class="thumb"><img src="<?= $recipes['image']?>" alt=""></a>
+                                <div class="description">
+                                    <h3><a href="<?= $recipes['href']?>"><?= $recipes['title']?></a></h3>
+                                    <div class="excerpt"><?= $recipes['description']?></div>
+                                </div>
+                            </article>
+                        </section>
+                        <section class="sales index-promo">
+                            <h2 class="sales-title">ВСЕ АКЦИИ</h2>
+                            <a href="http://bioboom.ua/index.php?route=information/accii" class="thumb"><img src="images/action.png" alt="" /></a>
+                        </section>
+                    </div>
+                <?php echo $content_bottom; ?>
+                
+                <section class="social_widgets">
+                <div>
+                <div class="fb-like-box" data-href="https://www.facebook.com/BioButikBioBoom" data-width="472" data-height="216" data-colorscheme="light" data-show-faces="true" data-header="false" data-stream="false" data-show-border="true"></div>
+                </div>
+                <div class="vk_widg">
+                <script type="text/javascript" src="//vk.com/js/api/openapi.js?112"></script>
+
+                <!-- VK Widget -->
+                <div id="vk_groups"></div>
+                <script type="text/javascript">
+                VK.Widgets.Group("vk_groups", {mode: 0, width: "472", height: "200", color1: 'FFFFFF', color2: '2B587A', color3: '5B7FA6'}, 49667008);
+                </script>
+                
+                </div>
+                  <div class="clear"></div>             
+                </section>
+                
+                
+                  <div class="bottom-sections clearfix">
+                      <!--  <section class="food-articles index-promo">
                             <h2>Готовим органично</h2>
                             <article class="s-article">
                                 <a href="#" class="thumb"><img src="images/articles/img-1.jpg" alt=""></a>
@@ -20,11 +78,11 @@
                                     <div class="excerpt">Приготовьте томаты, базилик, петрушку, чеснок и сыр, как указано в инструкции. Приготовьте томаты,</div>
                                 </div>
                             </article>
-                        </section>
+                        </section>-->
                         <section class="articles index-promo">
                             <h2>Статьи</h2>
                             <article class="s-article">
-                                <a href="<?= $news_data['href']?>" class="thumb"><img src="<?= $news_data['thumb']?>" alt=""></a>
+                                <a href="<?= $news_data['href']?>" class="thumb"><img src="<?= $news_data['image']?>" alt=""></a>
                                 <div class="description">
                                     <h3><a href="<?= $news_data['href']?>"><?= $news_data['title']?></a></h3>
                                     <div class="excerpt"><?= $news_data['description']?></div>
@@ -32,30 +90,22 @@
                             </article>
                         </section>
                         <section class="feedbacks index-promo hidden480">
-                            <div class="fake-title visible768">СЧАСТЛИВЫЕ ПОКУПАТЕЛИ</div>
-                            <div class="fake-title visible1024">ОТЗЫВЫ</div>
+                            <div class="fake-title">СЧАСТЛИВЫЕ ПОКУПАТЕЛИ</div>
                             <div class="feedbacks-slider" id="feedbacks-slider">
                                 <div class="slides clearfix">
-                                <? echo "AAAAAAAAAAA"?>
+                                    <? $i=1; ?>
                                 <? foreach($reviews as $review){?>
-                                <? echo "SSSSSSSSSSSS"?>
-                                    <div class="item">
+
+                                    <div class="item <?= ($i%2 != 0)?"odd":"" ?>">
                                         <div class="title"><i class="cite-icon"></i><span class="name"><?= $review['author']?></span></div>
-                                        <div class="comment"><? 
-                                        
-                                        if(strlen($review['text']) > 200){
-                                            
-                                            echo substr($review['text'], 0, 200)."(...)";
-                                        } else {
-                                            echo $review['text'];
-                                        }
-                                        ?>
+                                        <div class="comment">
+                                        <a style="text-decoration: none; color: #666;" href="<?= $review['href']?>">
+                                        <?= $review['text'] ?>
+                                        </a>
                                         </div>
                                     </div>
-                                    
-                                    
+                                    <? $i++;?>
                                     <? }?>
-                                    
                                     
                                 </div>
                                 <span class="control prev" title=""></span>
@@ -63,7 +113,7 @@
                             </div>
                         </section>
                         <section class="index-promo some-cite hidden480">
-                            “I FINALLY FOUND YOU!!! ... Your product speaks for itself. My family has been coming to your shop for several generations. I remember when Poppy would usher us into the shop with all these wonderful smells in the early 70's. Nuts, coffee, and fruit from all over the world. The smell of fresh peanuts roasting every saturday morning. The hustle and bustle of Mulberry Market at 8am. Deliveries in large trucks in and out all morning long. Everyone wanted the first batch. Thank you for keeping Poppy's dream alive, the business thriving and the product the same. (EXCELLENT) Now that I've found you, I will spread the word. ”
+                            Био-бутик «БіоБум»- уникальный магазин органических продуктов питания, косметики, бытовых товаров, средств личной гигиены, а также натуральной и органической одежды для детей, взрослых и подростков. Био-бутик «БіоБум»- берет свое название от греческого слова «БИОС»- жизнь, ведь мудрое сотрудничество человека с природой дает жизнь качественной продукции под названием «органическая», «био», «эко» продукция. Товары, создателем которых есть сама природа, являются безопасными, полезными и эффективными.
                         </section>
                     </div>
                 </div>

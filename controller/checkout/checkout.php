@@ -3,14 +3,22 @@ class ControllerCheckoutCheckout extends Controller {
 	private $error = array();
 
 	public function index() {
+	
+	//echo 'd';
 //redirect block
 		if ((!$this->cart->hasProducts() && (!isset($this->session->data['vouchers']) || !$this->session->data['vouchers'])) || (!$this->cart->hasStock() && !$this->config->get('config_stock_checkout'))) {
-			$this->redirect($this->url->link('checkout/cart'));
+		//$this->cart->getProducts();
+		$this->redirect($this->url->link('checkout/cart'));
 		}
-
+      
+       // if($this->cart->getTotal() < 250) {
+//            $this->redirect($this->url->link('checkout/cart', 'min_order=1'));
+//			
+//        }
 		$products = $this->cart->getProducts();
 	
-    $product_total = 0;
+        $product_total = 0;
+        
 		foreach($products as $product) {
 		
 
@@ -25,7 +33,7 @@ class ControllerCheckoutCheckout extends Controller {
 				$this->redirect($this->url->link('checkout/cart'));
 			}
 		}
-
+ 
 
 //products data
 		$product_data = array();
@@ -216,7 +224,14 @@ class ControllerCheckoutCheckout extends Controller {
 			$this->load->model('account/address');
 
 			$shipping_address = $this->model_account_address->getAddress($this->session->data['shipping_address_id']);
+		} elseif($this->customer->isLogged()) {
+		  $this->session->data['shipping_address_id'] = $this->customer->getAddressId();
 		}
+
+/*-Нова пошта-*/
+
+$this->load->model('shipping/newpostcities');
+$this->data['newpost_cities'] = $this->model_shipping_newpostcities->getCities();
 
 		$this->load->model('setting/extension');
 
@@ -332,6 +347,8 @@ $this->data['product_total'] = $product_total;
 		$total_data = array();
 		$total = 0;
 		$taxes = $this->cart->getTaxes();
+        
+        
 		$sort_order = array();
 
 		$results = $this->model_setting_extension->getExtensions('total');
@@ -348,14 +365,27 @@ $this->data['product_total'] = $product_total;
 			}
 		}
 		$sort_order = array();
-        
-        $this->data['sum'] = $total_data[0]['text'];
-        $this->data['deliv'] = $total_data[1]['text'];
-        $this->data['allsum'] = $total_data[2]['text'];
-        
+        //print_r($total_data);
+        $this->data['sum'] = "";
+        $this->data['deliv'] = "";
+        $this->data['allsum'] = "";
+        $this->data['coupon_sum'] = "";
+        //print_r($total_data);
+       
 		foreach($total_data as $key => $value) {
-			$sort_order[$key] = $value['sort_order'];
+			 $sort_order[$key] = $value['sort_order'];
+            
+             if($value['code'] == "shipping"){
+                    $this->data['deliv'] = $value['text'];
+             } elseif($value['code'] == "total") {
+                    $this->data['allsum'] = $value['text'];
+             } elseif($value['code'] == "sub_total") {
+                    $this->data['sum'] = $value['text'];
+             } elseif($value['code'] == "coupon") {
+                    $this->data['coupon_sum'] = $this->currency->format($value['text']);
+             }
 		}
+        
 		array_multisort($sort_order, SORT_ASC, $total_data);
 
 
@@ -366,6 +396,12 @@ $this->data['product_total'] = $product_total;
 				$shipping = explode('.', $this->request->post['shipping_method']);
 				$this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
 			}
+            if(isset($this->request->post['payment_method'])) {
+                $payment_code = $this->request->post['payment_method'];
+    			$this->session->data['payment_method'] = $this->session->data['payment_methods'][$payment_code]['title'];
+    			$this->session->data['payment_code'] = $payment_code;
+            }
+
 
 			$data = array();
 
@@ -387,31 +423,53 @@ $this->data['product_total'] = $product_total;
 			}
 
 			$data['firstname'] = $this->request->post['firstname'];
-			$data['lastname'] = $this->request->post['lastname'];
-			$data['email'] = $this->request->post['email'];
+            if(isset($this->request->post['lastname'])){
+			     $data['lastname'] = $this->request->post['lastname'];
+			} else {
+			     $data['lastname'] = '';
+			}
+            $data['email'] = $this->request->post['email'];
 			$data['telephone'] = $this->request->post['telephone'];
 			$data['fax'] = "";
 
 			$data['payment_firstname'] = $this->request->post['firstname'];
-			$data['payment_lastname'] = $this->request->post['lastname'];
-			$data['payment_address_1'] = $this->request->post['address_1'];
-			$data['shipping_address_1'] = $this->request->post['address_1'];
-
-			$this->load->model('localisation/country');			
-			$country_info = $this->model_localisation_country->getCountry($this->request->post['country_id']);
+            if(isset($this->request->post['lastname'])){
+			     $data['payment_lastname'] = $this->request->post['lastname'];//:$this->request->post['address_1']
+            } else {
+			     $data['payment_lastname'] = '';
+			}
+            
+            if(isset($this->request->post['street_kiev']) && $this->request->post['street_kiev'] != ""){
+    			$data['shipping_address_1'] = $data['payment_address_1'] = $this->request->post['street_kiev'];
+    		} elseif(isset($this->request->post['street_obl']) && $this->request->post['street_obl'] != ""){
+    		    $data['shipping_address_1'] = $data['payment_address_1'] = $this->request->post['street_obl'];
+    		} else {
+    		    $data['shipping_address_1'] = $data['payment_address_1'] = $this->request->post['address_1'];
+    		}
+            
+			$this->load->model('localisation/country');	
+            	
+            $country_id = (isset($this->request->post['country_id']))?$this->request->post['country_id']:220;
+             
+                	
+			$country_info = $this->model_localisation_country->getCountry($country_id);
 			
 			$country_name = "";
 			if ($country_info) {
 				$country_name = $country_info['name'];
 			}
 
-			$data['payment_city'] = $this->request->post['city'];
+			$data['payment_city'] = (isset($this->request->post['city_kiev']) && $this->request->post['city_kiev'] != "")?$this->request->post['city_kiev']:$this->request->post['city'];
 			$data['payment_country'] = $country_name;
-			$data['payment_country_id'] = $this->request->post['country_id'];
-			$data['shipping_city'] = $this->request->post['city'];
+			$data['payment_country_id'] = $country_id;
+			$data['shipping_city'] = (isset($this->request->post['city_kiev']) && $this->request->post['city_kiev'] != "")?$this->request->post['city_kiev']:$this->request->post['city'];
 			$data['shipping_country'] = $country_name;
-			$data['shipping_country_id'] = $this->request->post['country_id'];
+			$data['shipping_country_id'] = $country_id;
 
+/*-Добавить поля для стоимости доставки и скидки-*/
+
+			$data['discount'] = $this->request->post['discount'];
+            $data['shipping_price'] = $this->request->post['shipping_price'];
 
 			$data['payment_company'] = "";
 			$data['shipping_company'] = "";
@@ -422,7 +480,11 @@ $this->data['product_total'] = $product_total;
 			$data['payment_address_format'] = "";
 
 			$data['shipping_firstname'] = $this->request->post['firstname'];
-			$data['shipping_lastname'] = $this->request->post['lastname'];
+            if(isset($this->request->post['lastname'])){
+    			$data['shipping_lastname'] = $this->request->post['lastname'];
+            } else {
+                $data['shipping_lastname'] = '';
+            }
 			$data['shipping_address_2'] = "";
 			$data['shipping_postcode'] = "";
 			$data['shipping_zone'] = "";
@@ -504,6 +566,8 @@ $this->data['product_total'] = $product_total;
 //			}
 			$this->session->data['order_id'] = $order_id;
 			$this->session->data['last_order_id'] = $order_id;
+            
+            $this->session->data['order_info'] = json_encode($data);
 
 			$json["status"] = "success";
 			$this->response->setOutput(json_encode($json));
@@ -609,6 +673,7 @@ $this->data['product_total'] = $product_total;
 			$this->data['firstname'] = $this->customer->getFirstName();
 			$this->data['lastname'] = $this->customer->getLastName();
 			$this->data['email'] = $this->customer->getEmail();
+            
 			$this->data['telephone'] = $this->customer->getTelephone();
 			$this->data['fax'] = $this->customer->getFax();
 
@@ -618,6 +683,13 @@ $this->data['product_total'] = $product_total;
 			$this->data['address_1'] = $address['address_1'];
 			$this->data['country_id'] = $address['country_id'];
 			$this->data['city'] = $address['city'];
+            
+            if(!empty($this->data['telephone'])){
+                $this->data['min_reg'] = false;
+            } else {
+                $this->data['min_reg'] = true;
+            }
+            
 		}
 
 
@@ -658,7 +730,6 @@ $this->data['product_total'] = $product_total;
 		$this->language->load('account/order');
 		$this->data['column_comment'] = $this->language->get('column_comment');
 
-
 		$this->document->addScript('catalog/view/javascript/jquery/jquery.loadmask.min.js');
 		$this->document->addStyle('catalog/view/theme/default/stylesheet/jquery.loadmask.css');
 
@@ -693,16 +764,78 @@ $this->data['product_total'] = $product_total;
 	}
 	public function change_shipping() {
 		$json = array();
+        
+        
+        /*-Обновление цен по доставке-*/
+        
+        	$this->load->model('account/address');
+
+			$shipping_address = $this->model_account_address->getAddress($this->session->data['shipping_address_id']);
+        $this->load->model('setting/extension');
+        	$quote_data = array();
+
+			$results = $this->model_setting_extension->getExtensions('shipping');
+
+			foreach($results as $result) {
+				if($this->config->get($result['code'] . '_status')) {
+					$this->load->model('shipping/' . $result['code']);
+
+					$quote = $this->{'model_shipping_' . $result['code']}->getQuote($shipping_address);
+
+					if($quote) {
+						$quote_data[$result['code']] = array(
+							'title' => $quote['title'],
+							'quote' => $quote['quote'],
+							'sort_order' => $quote['sort_order'],
+							'error' => $quote['error']
+						);
+					}
+				}
+			}
+
+			$sort_order = array();
+
+			foreach($quote_data as $key => $value) {
+				$sort_order[$key] = $value['sort_order'];
+			}
+
+			array_multisort($sort_order, SORT_ASC, $quote_data);
+
+			$this->session->data['shipping_methods'] = $quote_data;
+        
+        /*-Обновление закончено-*/
+        
+        
+        
 		if(isset($this->request->post['shipping_method'])) {
 			$shipping = explode('.', $this->request->post['shipping_method']);
 			$this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
-		}
+   }
+   
 		$json['totals_data'] = $this->getTotalHtml();
 		$this->response->setOutput(json_encode($json));
 	}
-
+    
+    public function chose_warens() {
+        
+        $this->load->model('shipping/newpostcities');   
+		
+        $this->session->data['newpostcity'] = $this->request->get['city'];
+        
+		$this->data['warens'] = $this->model_shipping_newpostcities->getBranches($this->request->get['city']);
+		                
+		if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/checkout/branches.tpl')) {
+			$this->template = $this->config->get('config_template') . '/template/checkout/branches.tpl';
+		} else {
+			$this->template = 'default/template/checkout/branches.tpl';
+		}
+				
+		$this->response->setOutput($this->render());
+	}
+    
 	private function getTotalHtml($total_data = array()) {
 
+        $all = array();
 		if(count($total_data) == 0) {
 			$total = 0;
 			$taxes = $this->cart->getTaxes();
@@ -718,16 +851,24 @@ $this->data['product_total'] = $product_total;
 			foreach($results as $result) {
 				if($this->config->get($result['code'] . '_status')) {
 					$this->load->model('total/' . $result['code']);
-
 					$this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
 				}
-			}
+        	}
+            
 			$sort_order = array();
 			foreach($total_data as $key => $value) {
 				$sort_order[$key] = $value['sort_order'];
+                
+                if($value['code'] == "shipping"){
+                    $all['deliv'] = $value['text'];
+                } elseif($value['code'] == "total") {
+                    $all['total'] = $value['text'];
+                }
 			}
 			array_multisort($sort_order, SORT_ASC, $total_data);
 		}
+
+
 
 		$total_template = new Template();
 		$total_template->data['totals'] = $total_data;
@@ -735,7 +876,8 @@ $this->data['product_total'] = $product_total;
 		if(file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/checkout/total_data.tpl')) {
 			$template_path = $this->config->get('config_template') . '/template/checkout/total_data.tpl';
 		}
-		return $total_template->fetch($template_path);
+        return $all;
+		//return $total_template->fetch($template_path);
 	}
 
 	private function validate() {
@@ -744,14 +886,39 @@ $this->data['product_total'] = $product_total;
 			$this->error['firstname'] = $this->language->get('error_firstname');
 		}
 
-		if((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 64)) {
-			$this->error['lastname'] = $this->language->get('error_lastname');
-		}
+		//if((utf8_strlen($this->request->post['lastname']) < 1) || (utf8_strlen($this->request->post['lastname']) > 64)) {
+//			$this->error['lastname'] = $this->language->get('error_lastname');
+//		}
 
-		if((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {
-			$this->error['address_1'] = $this->language->get('error_address_1');
-		}
-
+        if(!empty($this->request->post['address_1'])){
+      		if((utf8_strlen($this->request->post['address_1']) < 3) || (utf8_strlen($this->request->post['address_1']) > 128)) {
+     			$this->error['address_1'] = $this->language->get('error_address_1');
+      		}
+        } else {
+            if(strpos($this->request->post['shipping_method'], 'citylink') !== false){
+                if((utf8_strlen($this->request->post['street_kiev']) < 3) || (utf8_strlen($this->request->post['street_kiev']) > 100)) {
+         			$this->error['street_kiev'] = $this->language->get('error_street_kiev');
+          		}
+            } elseif(strpos($this->request->post['shipping_method'], 'flat') !== false){
+                if((utf8_strlen($this->request->post['city_kiev']) < 3) || (utf8_strlen($this->request->post['city_kiev']) > 100) || utf8_strlen($this->request->post['city_kiev']) == 'Выберите город') {
+         			$this->error['city_kiev'] = $this->language->get('error_city_new');
+          		}
+                if((utf8_strlen($this->request->post['street_obl']) < 3) || (utf8_strlen($this->request->post['street_obl']) > 100)) {
+         			$this->error['street_obl'] = $this->language->get('error_street_kiev');
+          		}
+            } elseif(strpos($this->request->post['shipping_method'], 'novaposhta') !== false){
+                if((utf8_strlen($this->request->post['city_nova']) < 3) || (utf8_strlen($this->request->post['city_nova']) > 100) || utf8_strlen($this->request->post['city_nova']) == 'Выберите город') {
+         			$this->error['city_nova'] = $this->language->get('error_city_new');
+          		}
+                if((utf8_strlen($this->request->post['number']) < 3) || (utf8_strlen($this->request->post['number']) > 100) || utf8_strlen($this->request->post['number']) == 'Выберите город' || utf8_strlen($this->request->post['number']) == 'Выберите № склада') {
+         			$this->error['number'] = $this->language->get('error_city_new');
+          		}
+            }
+        }
+        
+        
+        
+        
 		if((utf8_strlen($this->request->post['email']) > 96) || !preg_match('/^[^\@]+@.*\.[a-z]{2,6}$/i', $this->request->post['email'])) {
 			$this->error['email'] = $this->language->get('error_email');
 		}
@@ -760,13 +927,13 @@ $this->data['product_total'] = $product_total;
 			$this->error['telephone'] = $this->language->get('error_telephone');
 		}
 
-		if ((utf8_strlen($this->request->post['city']) < 2) || (utf8_strlen($this->request->post['city']) > 128)) {
-			$this->error['city'] = $this->language->get('error_city');
-		}
+		//if ((utf8_strlen($this->request->post['city']) < 2) || (utf8_strlen($this->request->post['city']) > 128)) {
+//			$this->error['city'] = $this->language->get('error_city');
+//		}
 		
-		if ($this->request->post['country_id'] == '') {
-			$this->error['country_id'] = $this->language->get('error_country');
-		}
+	//	if ($this->request->post['country_id'] == '') {
+//			$this->error['country_id'] = $this->language->get('error_country');
+//		}
 
 		if ($this->config->get('config_checkout_id')) {
 			$this->load->model('catalog/information');
