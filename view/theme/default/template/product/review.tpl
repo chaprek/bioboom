@@ -22,6 +22,7 @@
             <? }?>
              <a href="#" data-id="<?= $review['review_id'] ?>" class="reply">ответить</a>
          </div>
+         <div>New tag</div>
      </div>
      <?php if(!empty($review['childs'])){ ?>
      <ul>
